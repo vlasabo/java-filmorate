@@ -13,19 +13,22 @@ public class FilmController {
 
 	@PutMapping
 	public Film updateFilm(@RequestBody Film film) {
-
+		log.trace("correct update film {}", film);
+		log.trace("incorrect update film {}", film);
 		return null;
 	}
 
 	@PostMapping
 	public Film addFilm(@RequestBody Film film) {
 
+		log.trace("correct add film {}", film);
+		log.trace("incorrect add film {}", film);
 		return null;
 	}
 
 	@GetMapping("/films")
 	public List<Film> getAllFilms() {
-
+		log.trace("get all films");
 		return null;
 	}
 }
