@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
@@ -8,14 +9,16 @@ import java.time.LocalDate;
 @Data
 public class User {
 
-	private int id;
+    private int id;
 
-	@Email(message = "{validation.email.Email}")
-	@NotEmpty
-	private final String email;
-	@NotEmpty
-	private final String login;
-	private final String name;
-	@Past
-	private final LocalDate birthday;
+    @Email(message = "EMAIL IS INCORRECT")
+    @NotEmpty
+    private final String email;
+    @NotEmpty(message = "LOGIN IS EMPTY")
+    private final String login;
+    private String name;
+    @Past(message = "DATE IS INCORRECT")
+    private final LocalDate birthday;
+
+
 }
