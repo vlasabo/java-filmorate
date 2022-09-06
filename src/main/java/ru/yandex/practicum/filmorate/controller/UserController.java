@@ -12,7 +12,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "user")
+@RequestMapping(value = "users")
 public class UserController {
     private final HashMap<Integer, User> allUsers = new HashMap<>();
 
@@ -49,14 +49,14 @@ public class UserController {
         return user;
     }
 
-    @GetMapping("/users")
+    @GetMapping
     public List<User> getAllUsers() {
         log.debug("get all users");
         return new ArrayList<>(allUsers.values());
     }
 
     private void setName(User user) {
-        if (user.getName().isBlank()) {
+        if (user.getName()==null||user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
 

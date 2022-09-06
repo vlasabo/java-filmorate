@@ -11,7 +11,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "film")
+@RequestMapping(value = "films")
 public class FilmController {
     private final HashMap<Integer, Film> allFilms = new HashMap<>();
 
@@ -48,7 +48,7 @@ public class FilmController {
         return film;
     }
 
-    @GetMapping("/films")
+    @GetMapping
     public List<Film> getAllFilms() {
         log.debug("get all films");
         return new ArrayList<>(allFilms.values());
