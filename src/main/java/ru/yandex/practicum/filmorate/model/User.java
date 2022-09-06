@@ -3,19 +3,19 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.Data;
 
 import javax.validation.constraints.*;
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 public class User {
 
 	private int id;
 
-	@Email
+	@Email(message = "{validation.email.Email}")
 	@NotEmpty
-	private String email;
+	private final String email;
 	@NotEmpty
-	private String login;
+	private final String login;
 	private final String name;
 	@Past
-	private final Date birthday;
+	private final LocalDate birthday;
 }
