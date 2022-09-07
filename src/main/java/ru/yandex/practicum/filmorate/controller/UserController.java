@@ -40,13 +40,16 @@ public class UserController {
     @PostMapping
     public User addUser(@Valid @RequestBody User user) {
         setName(user);
-        if (!user.getLogin().contains(" ")) {
-            user.setId(allUsers.size() + 1);
-            allUsers.put(allUsers.size() + 1, user); //new user have id=0?
-            log.debug("correct adding user {}", user);
-        } else {
+        try {
+            if (user.getLogin().contains(" ")) {
+                throw new ValidationException("incorrect login");
+            } else {
+                user.setId(allUsers.size() + 1);
+                allUsers.put(allUsers.size() + 1, user); //new user have id=0?
+                log.debug("correct adding user {}", user);
+            }
+        } catch (ValidationException e) {
             log.debug("incorrect adding user {}", user);
-            throw new ValidationException("incorrect login");
         }
         return user;
     }
@@ -58,7 +61,7 @@ public class UserController {
     }
 
     private void setName(User user) {
-        if (user.getName()==null||user.getName().isBlank()) {
+        if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
 
