@@ -20,10 +20,12 @@ public class UserController {
     public User updateUser(@Valid @RequestBody User user) {
         setName(user);
         int id = user.getId();
-
-        if (user.getLogin().contains(" ")) {
+        try {
+            if (user.getLogin().contains(" ")) {
+                throw new ValidationException("incorrect login");
+            }
+        } catch (ValidationException e) {
             log.debug("incorrect update user {}", user);
-            throw new ValidationException("incorrect login");
         }
         if (allUsers.containsKey(id)) {
             allUsers.put(id, user);

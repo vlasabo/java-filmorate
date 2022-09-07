@@ -11,6 +11,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -79,5 +80,21 @@ public class FilmorateApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.content().json(objectMapper.writeValueAsString(allUsers)));
 
+	}
+
+	@Test
+	@Order(3)
+	void createNewUserWithSpaceInLoginExpectingException() throws Exception {
+		User user = new User("aa@bb.com", "lo gin", "name", BIRTHDAY_DATE);
+		String requestBody = objectMapper.writeValueAsString(user);
+
+		try {
+			this.mockMvc.perform(post("/users")
+					.content(requestBody)
+					.contentType(MediaType.APPLICATION_JSON)).andExpect(mvcResult
+					-> mvcResult.getResolvedException().getClass().equals(ValidationException.class));
+		} catch (ValidationException e) {
+			System.out.println("all ok");
+		}
 	}
 }
