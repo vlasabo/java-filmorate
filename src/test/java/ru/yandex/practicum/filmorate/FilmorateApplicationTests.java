@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -10,15 +11,11 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.time.LocalDate;
-import java.util.ArrayList;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -51,7 +48,6 @@ public class FilmorateApplicationTests {
 				.contentType(MediaType.APPLICATION_JSON));
 
 		response
-				//.andDo(MockMvcResultHandlers.print())
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
 				.andExpect(MockMvcResultMatchers.jsonPath("$.email").value("aa@bb.com"))
@@ -72,15 +68,9 @@ public class FilmorateApplicationTests {
 		requestBody = objectMapper.writeValueAsString(user2);
 		this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON));
 
-		userController.addUser(user);
-		userController.addUser(user2);
-
-		var response = this.mockMvc.perform(get("/users"));
-		response
-				//.andDo(MockMvcResultHandlers.print())
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().json(objectMapper.writeValueAsString(userController.getAllUsers())));
-
+		var response = this.mockMvc.perform(get("/users")).andExpect(status().isOk()).andReturn();
+		String answer = response.getResponse().getContentAsString();
+		Assertions.assertEquals(answer, objectMapper.writeValueAsString(userController.getAllUsers()));
 	}
 
 	@Test
@@ -90,13 +80,12 @@ public class FilmorateApplicationTests {
 		User user = new User("aa@bb.com", "log in", "name", BIRTHDAY_DATE);
 		String requestBody = objectMapper.writeValueAsString(user);
 
-			//userController.addUser(user);
-			this.mockMvc.perform(post("/users")
-					.content(requestBody)
-					.contentType(MediaType.APPLICATION_JSON))
-					//.andExpect(result ->assertTrue(result.getResolvedException() instanceof ValidationException))
-					//.andExpect(result -> assertEquals("incorrect login", result.getResolvedException().getMessage()));
-					.andExpect(status().is4xxClientError());
+		this.mockMvc.perform(post("/users")
+						.content(requestBody)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
+				.andExpect(result -> assertEquals("incorrect login", result.getResolvedException().getMessage()))
+				.andExpect(status().is4xxClientError());
 	}
 
 	@Test
@@ -159,6 +148,92 @@ public class FilmorateApplicationTests {
 
 		this.mockMvc.perform(post("/users")
 						.content("")
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().is4xxClientError());
+	}
+
+	@Test
+	@Order(8)
+	void testCorrectPutMethod() throws Exception {
+		User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
+		String requestBody = objectMapper.writeValueAsString(user);
+		this.mockMvc.perform(post("/users")
+						.content(requestBody)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk());
+
+		user.setEmail("bb@aa.com");
+		user.setId(1);
+		requestBody = objectMapper.writeValueAsString(user);
+		this.mockMvc.perform(put("/users")
+						.content(requestBody)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
+				.andExpect(MockMvcResultMatchers.jsonPath("$.email").value("bb@aa.com"))
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	@Order(9)
+	void PutMethodWithIncorrectOrEmptyEmailExpectingStatus400() throws Exception {
+		User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
+		String requestBody = objectMapper.writeValueAsString(user);
+		this.mockMvc.perform(post("/users")
+						.content(requestBody)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk());
+
+		user.setEmail("bbaa");
+		user.setId(1);
+		requestBody = objectMapper.writeValueAsString(user);
+		this.mockMvc.perform(put("/users")
+						.content(requestBody)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().is4xxClientError());
+	}
+
+	@Test
+	@Order(10)
+	void PutMethodWithIncorrectBirthdayDateExpectingStatus400() throws Exception {
+		User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
+		String requestBody = objectMapper.writeValueAsString(user);
+		this.mockMvc.perform(post("/users")
+						.content(requestBody)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk());
+
+		user.setBirthday(LocalDate.now());
+		user.setId(1);
+		requestBody = objectMapper.writeValueAsString(user);
+		this.mockMvc.perform(put("/users")
+						.content(requestBody)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().is4xxClientError());
+	}
+
+	@Test
+	@Order(11)
+	void putUserWithEmptyBodyExpectingStatus400() throws Exception {
+		this.mockMvc.perform(put("/users")
+						.content("")
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().is4xxClientError());
+	}
+
+	@Test
+	@Order(12)
+	@Disabled
+	void putUserWithIncorrectIdExpectingStatus400() throws Exception {
+		User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
+		String requestBody = objectMapper.writeValueAsString(user);
+		this.mockMvc.perform(post("/users")
+				.content(requestBody)
+				.contentType(MediaType.APPLICATION_JSON));
+
+		user.setId(999);
+		requestBody = objectMapper.writeValueAsString(user);
+		this.mockMvc.perform(put("/users")
+						.content(requestBody)
 						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().is4xxClientError());
 	}
