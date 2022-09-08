@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +12,11 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.MyValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+
 import java.time.LocalDate;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -23,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UserController.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class FilmorateApplicationTests {
+public class UserControllerTests {
 
 	private final static LocalDate BIRTHDAY_DATE = LocalDate.ofEpochDay(1);
 
@@ -43,11 +44,9 @@ public class FilmorateApplicationTests {
 		User user = new User("aa@bb.com", "login", null, BIRTHDAY_DATE);
 		String requestBody = objectMapper.writeValueAsString(user);
 
-		var response = this.mockMvc.perform(post("/users")
-				.content(requestBody)
-				.contentType(MediaType.APPLICATION_JSON));
-
-		response
+		this.mockMvc.perform(post("/users")
+						.content(requestBody)
+						.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
 				.andExpect(MockMvcResultMatchers.jsonPath("$.email").value("aa@bb.com"))
@@ -74,7 +73,6 @@ public class FilmorateApplicationTests {
 	}
 
 	@Test
-	@Disabled
 	@Order(3)
 	void createNewUserWithSpaceInLoginExpectingException() throws Exception {
 		User user = new User("aa@bb.com", "log in", "name", BIRTHDAY_DATE);
@@ -83,7 +81,7 @@ public class FilmorateApplicationTests {
 		this.mockMvc.perform(post("/users")
 						.content(requestBody)
 						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
+				.andExpect(result -> assertTrue(result.getResolvedException() instanceof MyValidationException))
 				.andExpect(result -> assertEquals("incorrect login", result.getResolvedException().getMessage()))
 				.andExpect(status().is4xxClientError());
 	}
@@ -222,7 +220,6 @@ public class FilmorateApplicationTests {
 
 	@Test
 	@Order(12)
-	@Disabled
 	void putUserWithIncorrectIdExpectingStatus400() throws Exception {
 		User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
 		String requestBody = objectMapper.writeValueAsString(user);
@@ -238,5 +235,24 @@ public class FilmorateApplicationTests {
 				.andExpect(status().is4xxClientError());
 	}
 
+	@Test
+	@Order(13)
+	void updateUserWithSpaceInLoginExpectingException() throws Exception {
+		User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
+		String requestBody = objectMapper.writeValueAsString(user);
+		this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk());
+
+		user.setLogin("lo gin");
+		requestBody = objectMapper.writeValueAsString(user);
+		this.mockMvc.perform(put("/users")
+						.content(requestBody)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(result -> assertTrue(result.getResolvedException() instanceof MyValidationException))
+				.andExpect(result -> assertEquals("incorrect login", result.getResolvedException().getMessage()))
+				.andExpect(status().is4xxClientError());
+	}
+
 
 }
+

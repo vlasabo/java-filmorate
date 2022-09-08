@@ -2,10 +2,11 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.MyValidationException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
-import javax.validation.ValidationException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,7 @@ public class UserController {
 
 		if (user.getLogin().contains(" ")) {
 			log.debug("incorrect update user {}", user);
-			throw new ValidationException("incorrect login");
+			throw new MyValidationException("incorrect login");
 		}
 
 		if (allUsers.containsKey(id)) {
@@ -31,7 +32,7 @@ public class UserController {
 			log.debug("correct update user {}", user);
 		} else {
 			log.debug("incorrect update user {}", user);
-			throw new ValidationException("no user with this id");
+			throw new NotFoundException("no user with this id");
 		}
 		return user;
 	}
@@ -41,7 +42,7 @@ public class UserController {
 		setName(user);
 		if (user.getLogin().contains(" ")) {
 			log.debug("incorrect adding user {}", user);
-			throw new ValidationException("incorrect login");
+			throw new MyValidationException("incorrect login");
 		} else {
 			user.setId(allUsers.size() + 1);
 			allUsers.put(allUsers.size() + 1, user); //new user have id=0?
