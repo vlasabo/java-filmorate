@@ -15,46 +15,37 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "films")
 public class FilmController {
-	private final HashMap<Integer, Film> allFilms = new HashMap<>();
+    private final HashMap<Integer, Film> allFilms = new HashMap<>();
 
-	@PutMapping
-	public Film updateFilm(@Valid @RequestBody Film film) {
-		int id = film.getId();
+    @PutMapping
+    public Film updateFilm(@Valid @RequestBody Film film) {
+        int id = film.getId();
 
-		if (film.getReleaseDate().isBefore(Film.FIRST_FILM_RELEASE_DAY)) {
-			log.debug("incorrect update film {}", film);
-			throw new MyValidationException("incorrect release day");
-		}
+        if (allFilms.containsKey(id)) {
+            allFilms.put(id, film);
+            log.debug("correct update film {}", film);
+        } else {
+            log.debug("incorrect update film {}", film);
+            throw new NotFoundException("no film with this id");
+        }
+        return film;
+    }
 
-		if (allFilms.containsKey(id)) {
-			allFilms.put(id, film);
-			log.debug("correct update film {}", film);
-		} else {
-			log.debug("incorrect update film {}", film);
-			throw new NotFoundException("no film with this id");
-		}
-		return film;
-	}
+    @PostMapping
+    public Film addFilm(@Valid @RequestBody Film film) {
 
-	@PostMapping
-	public Film addFilm(@Valid @RequestBody Film film) {
-		if (film.getReleaseDate().isAfter(Film.FIRST_FILM_RELEASE_DAY)
-				|| film.getReleaseDate().isEqual(Film.FIRST_FILM_RELEASE_DAY)) {
-			film.setId(allFilms.size() + 1);
-			allFilms.put(allFilms.size() + 1, film);
-			log.debug("correct adding film {}", film);
-		} else {
-			log.debug("incorrect adding film {}", film);
-			throw new MyValidationException("incorrect release day");
-		}
-		return film;
-	}
+        film.setId(allFilms.size() + 1);
+        allFilms.put(allFilms.size() + 1, film);
+        log.debug("correct adding film {}", film);
 
-	@GetMapping
-	public List<Film> getAllFilms() {
-		log.debug("get all films");
-		return new ArrayList<>(allFilms.values());
-	}
+        return film;
+    }
+
+    @GetMapping
+    public List<Film> getAllFilms() {
+        log.debug("get all films");
+        return new ArrayList<>(allFilms.values());
+    }
 
 
 }

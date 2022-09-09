@@ -92,12 +92,7 @@ public class FilmControllerTests {
 		Film film = new Film("title", "", FIRST_FILM_RELEASE_DAY.minusDays(1), 100);
 		String requestBody = objectMapper.writeValueAsString(film);
 
-		assertThatExceptionOfType(MyValidationException.class)
-				.isThrownBy(() -> filmController.addFilm(film));
-
 		this.mockMvc.perform(post("/films").content(requestBody).contentType(MediaType.APPLICATION_JSON))
-				.andExpect(result -> assertTrue(result.getResolvedException() instanceof MyValidationException))
-				.andExpect(result -> assertEquals("incorrect release day", result.getResolvedException().getMessage()))
 				.andExpect(status().is4xxClientError());
 	}
 
