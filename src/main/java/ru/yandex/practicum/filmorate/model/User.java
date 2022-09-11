@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import ru.yandex.practicum.filmorate.validators.NoSpaceInString;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
@@ -11,11 +12,11 @@ import java.time.LocalDate;
 public class User {
 
     private int id;
-
     @Email(message = "EMAIL IS INCORRECT")
     @NotEmpty
     private String email;
     @NotEmpty(message = "LOGIN IS EMPTY")
+    @NoSpaceInString(message = "STRING CONTAIN SPACE")
     private String login;
     private String name;
     @Past(message = "DATE IS INCORRECT")

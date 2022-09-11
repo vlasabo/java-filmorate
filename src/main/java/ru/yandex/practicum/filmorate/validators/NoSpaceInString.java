@@ -6,11 +6,11 @@ import java.lang.annotation.*;
 
 
 @Documented
-@Constraint(validatedBy = DateValidator.class)
+@Constraint(validatedBy = LoginValidator.class)
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidFilmDate {
-    String message() default "incorrect release day";
+public @interface NoSpaceInString {
+    String message() default "string contain space";
 
     Class<?>[] groups() default {};
 
