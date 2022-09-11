@@ -9,7 +9,7 @@ public class LoginValidator implements ConstraintValidator<NoSpaceInString, Stri
     }
 
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        if (value==null){
+        if (value == null) {
             return false;
         }
         return !value.contains(" ");
