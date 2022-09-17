@@ -7,7 +7,9 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -21,12 +23,37 @@ public class UserService {
 
     public User getUserById(int userId) {
         Optional<User> userOptional = userStorage.getAllUsers().stream().filter(u -> u.getId() == userId).findFirst();
-        if (userOptional.isPresent()){
+        if (userOptional.isPresent()) {
             return userOptional.get();
         } else {
-            log.debug("User by id {} not found",userId);
-            throw new NotFoundException(String.format("User by id %d not found",userId));
+            log.debug("User by id {} not found", userId);
+            throw new NotFoundException(String.format("User by id %d not found", userId));
         }
 
+    }
+
+    public User addFriend(int userId, int friendId, boolean add) {
+        User user = getUserById(userId);
+        User friend = getUserById(friendId);
+        if (add) {
+            user.addFriend(friendId);
+            friend.addFriend(userId);
+        } else {
+            user.removeFriend(friendId);
+            friend.removeFriend(userId);
+        }
+        return user;
+    }
+
+    public List<User> getAllFriends(int userId) {
+        getUserById(userId); //check
+        return getAllFriends(userId);
+    }
+
+    public List<User> getIntersectionFriends(int userId, int otherId) {
+        getUserById(userId); //check
+        getUserById(otherId); //check
+        var listFriendsOtherUser = getAllFriends(otherId);
+        return getAllFriends(userId).stream().filter(listFriendsOtherUser::contains).collect(Collectors.toList());
     }
 }

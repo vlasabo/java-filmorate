@@ -32,5 +32,12 @@ public class User {
         this.birthday = birthday;
     }
 
+    public void addFriend(int userId) {
+        friends.add(userId);
+    }
+
+    public void removeFriend(int userId) {
+        friends.remove(userId);
+    }
 
 }

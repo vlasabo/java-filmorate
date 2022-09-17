@@ -10,12 +10,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,10 +38,21 @@ public class FilmControllerTests {
     private FilmController filmController;
 
     @SpyBean
-    private InMemoryFilmStorage filmStorage;
+    private UserController userController;
 
     @SpyBean
     private UserService userService;
+
+    @SpyBean
+    private InMemoryUserStorage userStorage;
+
+    @SpyBean
+    private FilmService filmService;
+
+    @SpyBean
+    private InMemoryFilmStorage filmStorage;
+
+
     @Test
     void createTwoNewFilmsAndCompareWithListFromControllerReceivedRequestGet() throws Exception {
         Film film = new Film("filmName", "descr1", FIRST_FILM_RELEASE_DAY.plusDays(1), 100);
