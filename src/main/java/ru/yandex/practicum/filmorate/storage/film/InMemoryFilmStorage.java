@@ -23,7 +23,6 @@ public class InMemoryFilmStorage implements FilmStorage{
 
     @Override
     public List<Film> getAllFilms() {
-        log.debug("get all films");
         return new ArrayList<>(allFilms.values());
     }
 
@@ -36,7 +35,7 @@ public class InMemoryFilmStorage implements FilmStorage{
             log.debug("correct update film {}", film);
         } else {
             log.debug("incorrect update film {}", film);
-            throw new NotFoundException("no film with this id");
+            throw new NotFoundException(String.format("Film by id %d not found",id));
         }
         return film;
     }

@@ -26,7 +26,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getAllUsers() {
-        log.debug("get all users");
         return new ArrayList<>(allUsers.values());
     }
 
