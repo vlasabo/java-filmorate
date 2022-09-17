@@ -24,27 +24,40 @@ public class FilmService {
         this.filmStorage = filmStorage;
     }
 
-    public void addLike(Film film, User user){
+    public Film like(int filmId, int userId, UserService userService, boolean like) {
+        Film film = getFilmById(filmId);
+        userService.getUserById(userId); //check user exist
+        if (like) {
+            film.addLike(userId);
+            log.debug("add like to film with id={} from user with id={}", filmId, userId);
+        } else {
+            film.removeLike(userId);
+            log.debug("remove like to film with id={} from user with id={}", filmId, userId);
+        }
+        return film;
+    }
+
+    public void removeLike(Film film, User user) {
         film.addLike(user.getId());
     }
 
-    public void removeLike(Film film, User user){
-        film.addLike(user.getId());
+    public List<Film> topNFilms(int quantity) {
+        if (quantity <= 0) {
+            quantity = 10;
+        }
+
+        List<Film> allFilms = filmStorage.getAllFilms();
+        return allFilms.stream().sorted(Comparator.comparing(Film::howManyLikes).reversed())
+                .limit(quantity).collect(Collectors.toList());
     }
 
-    public List<Film> top10Films(){
-       List<Film> allFilms = filmStorage.getAllFilms();
-       return allFilms.stream().sorted(Comparator.comparing(Film::howManyLikes).reversed())
-               .limit(10).collect(Collectors.toList());
-    }
-
-    public Film getFilmById(int filmId){
+    public Film getFilmById(int filmId) {
         Optional<Film> filmOptional = filmStorage.getAllFilms().stream().filter(f -> f.getId() == filmId).findFirst();
-        if (filmOptional.isPresent()){
+        if (filmOptional.isPresent()) {
             return filmOptional.get();
         } else {
-            log.debug("Film by id {} not found",filmId);
-            throw new NotFoundException(String.format("Film by id %d not found",filmId));
+            log.debug("Film by id {} not found", filmId);
+            throw new NotFoundException(String.format("Film by id %d not found", filmId));
         }
     }
 }

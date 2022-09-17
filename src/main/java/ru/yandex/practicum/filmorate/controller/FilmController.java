@@ -4,13 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -45,7 +45,7 @@ public class FilmController {
         return filmStorage.getAllFilms();
     }
 
-    @GetMapping("/{filmId}")
+    @GetMapping("{filmId}")
     public Film getFilmById(@PathVariable Integer filmId) {
         return filmService.getFilmById(filmId);
     }
@@ -53,12 +53,19 @@ public class FilmController {
 
     @PutMapping("{id}/like/{userId}")
     public Film likeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
-        Film film = filmService.getFilmById(id);
-        User user = userService.getUserById(userId);
-        filmService.addLike(film,user);
-        log.debug("add like to film with id={} from user with id={}",id,userId);
-        return film;
+        return filmService.like(id, userId, userService, true);
     }
 
+    @DeleteMapping("{id}/like/{userId}")
+    public Film unlikeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
+        return filmService.like(id, userId, userService, false);
+    }
+
+    @GetMapping("popular")
+    public List<Film> mostPopularFilms(@RequestParam Optional<String> count) {
+        //I know about defaultValue, Optional use for logging
+        log.debug("get first {} most popular films", count.orElse("(quantity not specified, so 10)"));
+        return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
+    }
 }
 
