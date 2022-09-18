@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,8 +47,9 @@ public class UserService {
     }
 
     public List<User> getAllFriends(int userId) {
-        getUserById(userId); //check
-        return getAllFriends(userId);
+        User user = getUserById(userId);
+        Set<Integer> allFriendsId = user.getFriends();
+        return allFriendsId.stream().map(this::getUserById).collect(Collectors.toList());
     }
 
     public List<User> getIntersectionFriends(int userId, int otherId) {
