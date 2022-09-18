@@ -39,9 +39,11 @@ public class UserService {
         if (add) {
             user.addFriend(friendId);
             friend.addFriend(userId);
+            log.debug("User {} add friend {}", userId, friendId);
         } else {
             user.removeFriend(friendId);
             friend.removeFriend(userId);
+            log.debug("User {} remove friend {}", userId, friendId);
         }
         return user;
     }
@@ -55,6 +57,7 @@ public class UserService {
     public List<User> getIntersectionFriends(int userId, int otherId) {
         getUserById(userId); //check
         getUserById(otherId); //check
+        log.debug("get friends intersections user {} and {}", userId, otherId);
         var listFriendsOtherUser = getAllFriends(otherId);
         return getAllFriends(userId).stream().filter(listFriendsOtherUser::contains).collect(Collectors.toList());
     }

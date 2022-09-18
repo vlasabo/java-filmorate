@@ -22,7 +22,6 @@ public class UserController {
 
     private final UserService userService;
 
-    //TODO: логи, тесты!
     @Autowired
     public UserController(UserStorage userStorage, UserService userService) {
         this.userStorage = userStorage;
@@ -62,6 +61,7 @@ public class UserController {
 
     @GetMapping("/{userId}/friends")
     public List<User> getAllFriends(@PathVariable int userId) {
+        log.debug("get all friends for user {}", userId);
         return userService.getAllFriends(userId);
     }
 
@@ -74,7 +74,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handle(final MethodArgumentNotValidException e) {
         return new ErrorResponse(
-                "Ошибка данных", e.getMessage()
+                "Ошибка валидации данных", e.getMessage()
         );
     }
 
@@ -82,7 +82,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handle(final RuntimeException e) {
         return new ErrorResponse(
-                "Ошибка данных", e.getMessage()
+                "Данные не найдены", e.getMessage()
         );
     }
 
