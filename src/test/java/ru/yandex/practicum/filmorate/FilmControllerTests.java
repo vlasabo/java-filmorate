@@ -12,12 +12,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -172,6 +174,51 @@ public class FilmControllerTests {
                         .content(requestBody)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void getFilmById() throws Exception {
+        Film film = new Film("title", "", FIRST_FILM_RELEASE_DAY, 1);
+        String requestBody = objectMapper.writeValueAsString(film);
+
+        this.mockMvc.perform(post("/films")
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        film.setId(1);
+
+
+        var response = this.mockMvc.perform(get("/films/1")
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        Assertions.assertEquals(response.getResponse().getContentAsString(), objectMapper.writeValueAsString(film));
+    }
+
+    @Test
+    void likeFilm() throws Exception {
+        Film film = new Film("title", "", FIRST_FILM_RELEASE_DAY, 1);
+        String requestBody = objectMapper.writeValueAsString(film);
+
+        this.mockMvc.perform(post("/films")
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        film.setId(1);
+
+        User user = new User("aa@bb.com", "login", "name", LocalDate.ofEpochDay(1));
+        requestBody = objectMapper.writeValueAsString(user);
+        this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON));
+
+        var response = this.mockMvc.perform(put("/films/1/like/1")
+                        .contentType(MediaType.TEXT_PLAIN))
+                .andExpect(status().isOk()).andReturn();
+        var setLikes = new HashSet<>();
+        setLikes.add(1);
+
+        Assertions.assertEquals(objectMapper.readValue(response.getResponse().getContentAsString(), Film.class).getLikes()
+                , setLikes);
     }
 
 }
