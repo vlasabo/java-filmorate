@@ -32,15 +32,15 @@ public class Film {
         this.duration = duration;
     }
 
-    public void addLike(int userId){
+    public void addLike(int userId) {
         likes.add(userId);
     }
 
-    public void removeLike(int userId){
+    public void removeLike(int userId) {
         likes.remove(userId);
     }
 
-    public int howManyLikes(){
+    public int howManyLikes() {
         return likes.size();
     }
 }

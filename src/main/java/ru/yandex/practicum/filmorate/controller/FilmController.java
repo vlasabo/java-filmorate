@@ -21,71 +21,71 @@ import java.util.Optional;
 @ResponseBody
 public class FilmController {
 
-    private final FilmStorage filmStorage;
-    private final FilmService filmService;
-    private final UserService userService;
+	private final FilmStorage filmStorage;
+	private final FilmService filmService;
+	private final UserService userService;
 
-    @Autowired
-    public FilmController(FilmStorage filmStorage, FilmService filmService, UserService userService) {
-        this.filmStorage = filmStorage;
-        this.filmService = filmService;
-        this.userService = userService;
-    }
+	@Autowired
+	public FilmController(FilmStorage filmStorage, FilmService filmService, UserService userService) {
+		this.filmStorage = filmStorage;
+		this.filmService = filmService;
+		this.userService = userService;
+	}
 
-    @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film film) {
-        return filmStorage.updateFilm(film);
-    }
+	@PutMapping
+	public Film updateFilm(@Valid @RequestBody Film film) {
+		return filmStorage.updateFilm(film);
+	}
 
-    @PostMapping
-    public Film addFilm(@Valid @RequestBody Film film) {
-        return filmStorage.addFilm(film);
-    }
+	@PostMapping
+	public Film addFilm(@Valid @RequestBody Film film) {
+		return filmStorage.addFilm(film);
+	}
 
-    @GetMapping
-    public List<Film> getAllFilms() {
-        log.debug("get all films");
-        return filmStorage.getAllFilms();
-    }
+	@GetMapping
+	public List<Film> getAllFilms() {
+		log.debug("get all films");
+		return filmStorage.getAllFilms();
+	}
 
-    @GetMapping("{filmId}")
-    public Film getFilmById(@PathVariable Integer filmId) {
-        return filmService.getFilmById(filmId);
-    }
+	@GetMapping("{filmId}")
+	public Film getFilmById(@PathVariable Integer filmId) {
+		return filmService.getFilmById(filmId);
+	}
 
 
-    @PutMapping("{id}/like/{userId}")
-    public Film likeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
-        return filmService.like(id, userId, userService, true);
-    }
+	@PutMapping("{id}/like/{userId}")
+	public Film likeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
+		return filmService.like(id, userId, userService, true);
+	}
 
-    @DeleteMapping("{id}/like/{userId}")
-    public Film unlikeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
-        return filmService.like(id, userId, userService, false);
-    }
+	@DeleteMapping("{id}/like/{userId}")
+	public Film unlikeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
+		return filmService.like(id, userId, userService, false);
+	}
 
-    @GetMapping("popular")
-    public List<Film> mostPopularFilms(@RequestParam Optional<String> count) {
-        //I know about defaultValue, Optional use for logging
-        log.debug("get first {} most popular films", count.orElse("(quantity not specified, so 10)"));
-        return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
-    }
+	@GetMapping("popular")
+	public List<Film> mostPopularFilms(@RequestParam Optional<String> count) {
+		//I know about defaultValue, Optional use for logging
+		log.debug("get first {} most popular films", count.orElse("(quantity not specified, so 10)"));
+		return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
+	}
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handle(final MethodArgumentNotValidException e) {
-        return new ErrorResponse(
-                "Ошибка данных", e.getMessage()
-        );
-    }
+	@ExceptionHandler
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ErrorResponse handle(final MethodArgumentNotValidException e) {
+		return new ErrorResponse(
+				"Data validation error", e.getMessage()
+		);
+	}
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handle(final RuntimeException e) {
-        return new ErrorResponse(
-                "Ошибка данных", e.getMessage()
-        );
-    }
+	@ExceptionHandler
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public ErrorResponse handle(final RuntimeException e) {
+		return new ErrorResponse(
+				"No data found", e.getMessage()
+		);
+	}
 
 }
 

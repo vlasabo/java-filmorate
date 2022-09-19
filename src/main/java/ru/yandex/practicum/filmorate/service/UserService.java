@@ -15,50 +15,50 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class UserService {
-    private final UserStorage userStorage;
+	private final UserStorage userStorage;
 
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
+	@Autowired
+	public UserService(UserStorage userStorage) {
+		this.userStorage = userStorage;
+	}
 
-    public User getUserById(int userId) {
-        Optional<User> userOptional = userStorage.getAllUsers().stream().filter(u -> u.getId() == userId).findFirst();
-        if (userOptional.isPresent()) {
-            return userOptional.get();
-        } else {
-            log.debug("User by id {} not found", userId);
-            throw new NotFoundException(String.format("User by id %d not found", userId));
-        }
+	public User getUserById(int userId) {
+		Optional<User> userOptional = userStorage.getAllUsers().stream().filter(u -> u.getId() == userId).findFirst();
+		if (userOptional.isPresent()) {
+			return userOptional.get();
+		} else {
+			log.debug("User by id {} not found", userId);
+			throw new NotFoundException(String.format("User by id %d not found", userId));
+		}
 
-    }
+	}
 
-    public User addFriend(int userId, int friendId, boolean add) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
-        if (add) {
-            user.addFriend(friendId);
-            friend.addFriend(userId);
-            log.debug("User {} add friend {}", userId, friendId);
-        } else {
-            user.removeFriend(friendId);
-            friend.removeFriend(userId);
-            log.debug("User {} remove friend {}", userId, friendId);
-        }
-        return user;
-    }
+	public User addFriend(int userId, int friendId, boolean add) {
+		User user = getUserById(userId);
+		User friend = getUserById(friendId);
+		if (add) {
+			user.addFriend(friendId);
+			friend.addFriend(userId);
+			log.debug("User {} add friend {}", userId, friendId);
+		} else {
+			user.removeFriend(friendId);
+			friend.removeFriend(userId);
+			log.debug("User {} remove friend {}", userId, friendId);
+		}
+		return user;
+	}
 
-    public List<User> getAllFriends(int userId) {
-        User user = getUserById(userId);
-        Set<Integer> allFriendsId = user.getFriends();
-        return allFriendsId.stream().map(this::getUserById).collect(Collectors.toList());
-    }
+	public List<User> getAllFriends(int userId) {
+		User user = getUserById(userId);
+		Set<Integer> allFriendsId = user.getFriends();
+		return allFriendsId.stream().map(this::getUserById).collect(Collectors.toList());
+	}
 
-    public List<User> getIntersectionFriends(int userId, int otherId) {
-        getUserById(userId); //check
-        getUserById(otherId); //check
-        log.debug("get friends intersections user {} and {}", userId, otherId);
-        var listFriendsOtherUser = getAllFriends(otherId);
-        return getAllFriends(userId).stream().filter(listFriendsOtherUser::contains).collect(Collectors.toList());
-    }
+	public List<User> getIntersectionFriends(int userId, int otherId) {
+		getUserById(userId); //check
+		getUserById(otherId); //check
+		log.debug("get friends intersections user {} and {}", userId, otherId);
+		var listFriendsOtherUser = getAllFriends(otherId);
+		return getAllFriends(userId).stream().filter(listFriendsOtherUser::contains).collect(Collectors.toList());
+	}
 }

@@ -18,73 +18,73 @@ import java.util.List;
 @ResponseBody
 public class UserController {
 
-    private final UserStorage userStorage;
+	private final UserStorage userStorage;
 
-    private final UserService userService;
+	private final UserService userService;
 
-    @Autowired
-    public UserController(UserStorage userStorage, UserService userService) {
-        this.userStorage = userStorage;
-        this.userService = userService;
-    }
+	@Autowired
+	public UserController(UserStorage userStorage, UserService userService) {
+		this.userStorage = userStorage;
+		this.userService = userService;
+	}
 
-    @PutMapping
-    public User updateUser(@Valid @RequestBody User user) {
-        return userStorage.updateUser(user);
-    }
+	@PutMapping
+	public User updateUser(@Valid @RequestBody User user) {
+		return userStorage.updateUser(user);
+	}
 
-    @PostMapping
-    public User addUser(@Valid @RequestBody User user) {
-        return userStorage.addUser(user);
-    }
+	@PostMapping
+	public User addUser(@Valid @RequestBody User user) {
+		return userStorage.addUser(user);
+	}
 
-    @GetMapping
-    public List<User> getAllUsers() {
-        log.debug("get all users");
-        return userStorage.getAllUsers();
-    }
+	@GetMapping
+	public List<User> getAllUsers() {
+		log.debug("get all users");
+		return userStorage.getAllUsers();
+	}
 
-    @GetMapping("/{userId}")
-    public User getUserById(@PathVariable Integer userId) {
-        return userService.getUserById(userId);
-    }
+	@GetMapping("/{userId}")
+	public User getUserById(@PathVariable Integer userId) {
+		return userService.getUserById(userId);
+	}
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public User addFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
-        return userService.addFriend(id, friendId, true);
-    }
+	@PutMapping("/{id}/friends/{friendId}")
+	public User addFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+		return userService.addFriend(id, friendId, true);
+	}
 
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public User deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
-        return userService.addFriend(id, friendId, false);
-    }
+	@DeleteMapping("/{id}/friends/{friendId}")
+	public User deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+		return userService.addFriend(id, friendId, false);
+	}
 
-    @GetMapping("/{userId}/friends")
-    public List<User> getAllFriends(@PathVariable int userId) {
-        log.debug("get all friends for user {}", userId);
-        return userService.getAllFriends(userId);
-    }
+	@GetMapping("/{userId}/friends")
+	public List<User> getAllFriends(@PathVariable int userId) {
+		log.debug("get all friends for user {}", userId);
+		return userService.getAllFriends(userId);
+	}
 
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getIntersectionFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
-        return userService.getIntersectionFriends(id, otherId);
-    }
+	@GetMapping("/{id}/friends/common/{otherId}")
+	public List<User> getIntersectionFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
+		return userService.getIntersectionFriends(id, otherId);
+	}
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handle(final MethodArgumentNotValidException e) {
-        return new ErrorResponse(
-                "Ошибка валидации данных", e.getMessage()
-        );
-    }
+	@ExceptionHandler
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ErrorResponse handle(final MethodArgumentNotValidException e) {
+		return new ErrorResponse(
+				"Data validation error", e.getMessage()
+		);
+	}
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handle(final RuntimeException e) {
-        return new ErrorResponse(
-                "Данные не найдены", e.getMessage()
-        );
-    }
+	@ExceptionHandler
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public ErrorResponse handle(final RuntimeException e) {
+		return new ErrorResponse(
+				"No data found", e.getMessage()
+		);
+	}
 
 
 }
