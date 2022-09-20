@@ -7,7 +7,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -15,33 +14,30 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "users")
 @Slf4j
-@ResponseBody
 public class UserController {
 
-	private final UserStorage userStorage;
 
 	private final UserService userService;
 
 	@Autowired
-	public UserController(UserStorage userStorage, UserService userService) {
-		this.userStorage = userStorage;
+	public UserController(UserService userService) {
 		this.userService = userService;
 	}
 
 	@PutMapping
 	public User updateUser(@Valid @RequestBody User user) {
-		return userStorage.updateUser(user);
+		return userService.updateUser(user);
 	}
 
 	@PostMapping
 	public User addUser(@Valid @RequestBody User user) {
-		return userStorage.addUser(user);
+		return userService.addUser(user);
 	}
 
 	@GetMapping
 	public List<User> getAllUsers() {
 		log.debug("get all users");
-		return userStorage.getAllUsers();
+		return userService.getAllUsers();
 	}
 
 	@GetMapping("/{userId}")

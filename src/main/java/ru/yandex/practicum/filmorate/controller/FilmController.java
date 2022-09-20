@@ -8,44 +8,40 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
-
 @RestController
 @RequestMapping(value = "films")
 @Slf4j
-@ResponseBody
 public class FilmController {
 
-	private final FilmStorage filmStorage;
+
 	private final FilmService filmService;
 	private final UserService userService;
 
 	@Autowired
-	public FilmController(FilmStorage filmStorage, FilmService filmService, UserService userService) {
-		this.filmStorage = filmStorage;
+	public FilmController(FilmService filmService, UserService userService) {
 		this.filmService = filmService;
 		this.userService = userService;
 	}
 
 	@PutMapping
 	public Film updateFilm(@Valid @RequestBody Film film) {
-		return filmStorage.updateFilm(film);
+		return filmService.updateFilm(film);
 	}
 
 	@PostMapping
 	public Film addFilm(@Valid @RequestBody Film film) {
-		return filmStorage.addFilm(film);
+		return filmService.addFilm(film);
 	}
 
 	@GetMapping
 	public List<Film> getAllFilms() {
 		log.debug("get all films");
-		return filmStorage.getAllFilms();
+		return filmService.getAllFilms();
 	}
 
 	@GetMapping("{filmId}")

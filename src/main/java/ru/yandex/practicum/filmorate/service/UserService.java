@@ -61,4 +61,17 @@ public class UserService {
 		var listFriendsOtherUser = getAllFriends(otherId);
 		return getAllFriends(userId).stream().filter(listFriendsOtherUser::contains).collect(Collectors.toList());
 	}
+
+	public User updateUser(User user) {
+		return userStorage.updateUser(user);
+	}
+
+	public User addUser(User user) {
+		return userStorage.addUser(user);
+	}
+
+	public List<User> getAllUsers() {
+		log.debug("get all users");
+		return userStorage.getAllUsers();
+	}
 }

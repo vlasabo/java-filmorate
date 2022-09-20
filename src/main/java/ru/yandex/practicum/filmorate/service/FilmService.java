@@ -41,7 +41,7 @@ public class FilmService {
 			quantity = 10;
 		}
 
-		List<Film> allFilms = filmStorage.getAllFilms();
+		List<Film> allFilms = getAllFilms();
 		return allFilms.stream().sorted(Comparator.comparing(Film::howManyLikes).reversed())
 				.limit(quantity).collect(Collectors.toList());
 	}
@@ -56,4 +56,17 @@ public class FilmService {
 			throw new NotFoundException(String.format("Film by id %d not found", filmId));
 		}
 	}
+
+	public List<Film> getAllFilms() {
+		return filmStorage.getAllFilms();
+	}
+
+	public Film addFilm(Film film) {
+		return filmStorage.addFilm(film);
+	}
+
+	public Film updateFilm(Film film) {
+		return filmStorage.updateFilm(film);
+	}
+
 }
