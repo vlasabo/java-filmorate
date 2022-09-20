@@ -7,6 +7,9 @@ import ru.yandex.practicum.filmorate.validators.ValidFilmDate;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Positive;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+
 
 @Data
 public class Film {
@@ -20,6 +23,7 @@ public class Film {
     private LocalDate releaseDate;
     @Positive(message = "DURATION IS NEGATIVE OR ZERO")
     private final int duration;
+    private Set<Integer> likes = new HashSet<>();
 
     public Film(String title, String description, LocalDate releaseDate, int duration) {
         this.name = title;
@@ -28,4 +32,15 @@ public class Film {
         this.duration = duration;
     }
 
+    public void addLike(int userId) {
+        likes.add(userId);
+    }
+
+    public void removeLike(int userId) {
+        likes.remove(userId);
+    }
+
+    public int howManyLikes() {
+        return likes.size();
+    }
 }

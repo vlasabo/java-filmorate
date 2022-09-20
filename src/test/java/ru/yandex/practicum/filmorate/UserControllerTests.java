@@ -13,7 +13,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -31,6 +39,12 @@ public class UserControllerTests {
 
     @SpyBean
     private UserController userController;
+
+    @SpyBean
+    private InMemoryUserStorage userStorage;
+
+    @SpyBean
+    private UserService userService;
 
 
     @Test
@@ -76,7 +90,7 @@ public class UserControllerTests {
         this.mockMvc.perform(post("/users")
                         .content(requestBody)
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -241,9 +255,125 @@ public class UserControllerTests {
         this.mockMvc.perform(put("/users")
                         .content(requestBody)
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError());
     }
 
+    @Test
+    @Order(14)
+    void getUsersFriends() throws Exception {
+        User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
+        User user2 = new User("aa@bb2.com", "login2", "name2", BIRTHDAY_DATE);
+        User user3 = new User("aa@bb3.com", "login3", "name3", BIRTHDAY_DATE);
+        String requestBody = objectMapper.writeValueAsString(user);
+        this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        requestBody = objectMapper.writeValueAsString(user2);
+        this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        requestBody = objectMapper.writeValueAsString(user3);
+        this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        this.mockMvc.perform(put("/users/1/friends/2"));
+        this.mockMvc.perform(put("/users/1/friends/3"));
+
+        var response = this.mockMvc.perform(get("/users/1/friends"))
+                .andExpect(status().isOk()).andReturn();
+
+        String answer = response.getResponse().getContentAsString();
+        var friendsSet = new HashSet<Integer>();
+        friendsSet.add(1);
+        user2.setId(2);
+        user3.setId(3);
+        user2.setFriends(friendsSet);
+        user3.setFriends(friendsSet);
+        Assertions.assertEquals(answer, objectMapper.writeValueAsString(Stream.of(user2, user3).collect(Collectors.toList())));
+    }
+
+    @Test
+    @Order(15)
+    void deleteFriend() throws Exception {
+        User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
+        User user2 = new User("aa@bb2.com", "login2", "name2", BIRTHDAY_DATE);
+
+        String requestBody = objectMapper.writeValueAsString(user);
+        this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        requestBody = objectMapper.writeValueAsString(user2);
+        this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+
+        this.mockMvc.perform(put("/users/1/friends/2"));
+        var response = this.mockMvc.perform(get("/users/1/friends"))
+                .andExpect(status().isOk()).andReturn();
+        String answer = response.getResponse().getContentAsString();
+        var friendsSet = new HashSet<Integer>();
+        friendsSet.add(1);
+        user2.setId(2);
+        user2.setFriends(friendsSet);
+        Assertions.assertEquals(answer, objectMapper.writeValueAsString(Stream.of(user2).collect(Collectors.toList())));
+
+        this.mockMvc.perform(delete("/users/1/friends/2"));
+        response = this.mockMvc.perform(get("/users/1/friends"))
+                .andExpect(status().isOk()).andReturn();
+        answer = response.getResponse().getContentAsString();
+        Assertions.assertEquals(answer, "[]");
+
+        response = this.mockMvc.perform(get("/users/2/friends"))
+                .andExpect(status().isOk()).andReturn();
+        answer = response.getResponse().getContentAsString();
+        Assertions.assertEquals(answer, "[]");
+    }
+
+    @Test
+    @Order(16)
+    void getUserById() throws Exception {
+        User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
+        String requestBody = objectMapper.writeValueAsString(user);
+        this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        var response = this.mockMvc.perform(get("/users/1"))
+                .andExpect(status().isOk()).andReturn();
+        String answer = response.getResponse().getContentAsString();
+
+        user.setId(1);
+        Assertions.assertEquals(answer, objectMapper.writeValueAsString(user));
+
+        this.mockMvc.perform(get("/users/2"))
+                .andExpect(status().is4xxClientError());
+
+    }
+
+    @Test
+    @Order(17)
+    void getUsersFriendsIntersection() throws Exception {
+        User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
+        User user2 = new User("aa@bb2.com", "login2", "name2", BIRTHDAY_DATE);
+        User user3 = new User("aa@bb3.com", "login3", "name3", BIRTHDAY_DATE);
+        String requestBody = objectMapper.writeValueAsString(user);
+        this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        requestBody = objectMapper.writeValueAsString(user2);
+        this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        requestBody = objectMapper.writeValueAsString(user3);
+        this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        this.mockMvc.perform(put("/users/1/friends/2"));
+        this.mockMvc.perform(put("/users/1/friends/3"));
+        user.setId(1);
+        var setFriends = new HashSet<Integer>();
+        setFriends.add(2);
+        setFriends.add(3);
+        user.setFriends(setFriends);
+        var response = this.mockMvc.perform(get("/users/2/friends/common/3"))
+                .andExpect(status().isOk()).andReturn();
+        String answer = response.getResponse().getContentAsString();
+        Assertions.assertEquals(answer, objectMapper.writeValueAsString(List.of(user)));
+    }
 
 }
 

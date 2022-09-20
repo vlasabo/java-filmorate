@@ -5,13 +5,13 @@ import javax.validation.ConstraintValidatorContext;
 
 public class LoginValidator implements ConstraintValidator<NoSpaceInString, String> {
 
-    public void initialize(NoSpaceInString constraint) {
-    }
+	public void initialize(NoSpaceInString constraint) {
+	}
 
-    public boolean isValid(String value, ConstraintValidatorContext context) {
-        if (value == null) {
-            return false;
-        }
-        return !value.contains(" ");
-    }
+	public boolean isValid(String value, ConstraintValidatorContext context) {
+		if (value == null) {
+			return false;
+		}
+		return !value.contains(" ");
+	}
 }

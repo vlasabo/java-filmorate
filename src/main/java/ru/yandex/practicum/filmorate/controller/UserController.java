@@ -1,53 +1,86 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping(value = "users")
+@Slf4j
 public class UserController {
-    private final HashMap<Integer, User> allUsers = new HashMap<>();
 
-    @PutMapping
-    public User updateUser(@Valid @RequestBody User user) {
-        setName(user);
-        int id = user.getId();
-        if (allUsers.containsKey(id)) {
-            allUsers.put(id, user);
-            log.debug("correct update user {}", user);
-        } else {
-            log.debug("incorrect update user {}", user);
-            throw new NotFoundException("no user with this id");
-        }
-        return user;
-    }
 
-    @PostMapping
-    public User addUser(@Valid @RequestBody User user) {
-        setName(user);
-        user.setId(allUsers.size() + 1);
-        allUsers.put(allUsers.size() + 1, user); //new user have id=0?
-        log.debug("correct adding user {}", user);
-        return user;
-    }
+	private final UserService userService;
 
-    @GetMapping
-    public List<User> getAllUsers() {
-        log.debug("get all users");
-        return new ArrayList<>(allUsers.values());
-    }
+	@Autowired
+	public UserController(UserService userService) {
+		this.userService = userService;
+	}
 
-    private void setName(User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-    }
+	@PutMapping
+	public User updateUser(@Valid @RequestBody User user) {
+		return userService.updateUser(user);
+	}
+
+	@PostMapping
+	public User addUser(@Valid @RequestBody User user) {
+		return userService.addUser(user);
+	}
+
+	@GetMapping
+	public List<User> getAllUsers() {
+		log.debug("get all users");
+		return userService.getAllUsers();
+	}
+
+	@GetMapping("/{userId}")
+	public User getUserById(@PathVariable Integer userId) {
+		return userService.getUserById(userId);
+	}
+
+	@PutMapping("/{id}/friends/{friendId}")
+	public User addFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+		return userService.addFriend(id, friendId, true);
+	}
+
+	@DeleteMapping("/{id}/friends/{friendId}")
+	public User deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+		return userService.addFriend(id, friendId, false);
+	}
+
+	@GetMapping("/{userId}/friends")
+	public List<User> getAllFriends(@PathVariable int userId) {
+		log.debug("get all friends for user {}", userId);
+		return userService.getAllFriends(userId);
+	}
+
+	@GetMapping("/{id}/friends/common/{otherId}")
+	public List<User> getIntersectionFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
+		return userService.getIntersectionFriends(id, otherId);
+	}
+
+	@ExceptionHandler
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ErrorResponse handle(final MethodArgumentNotValidException e) {
+		return new ErrorResponse(
+				"Data validation error", e.getMessage()
+		);
+	}
+
+	@ExceptionHandler
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public ErrorResponse handle(final RuntimeException e) {
+		return new ErrorResponse(
+				"No data found", e.getMessage()
+		);
+	}
+
+
 }

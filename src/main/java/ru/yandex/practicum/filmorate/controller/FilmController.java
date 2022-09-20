@@ -1,47 +1,87 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
-@Slf4j
+import javax.validation.Valid;
+import java.util.List;
+import java.util.Optional;
+
 @RestController
 @RequestMapping(value = "films")
+@Slf4j
 public class FilmController {
-    private final HashMap<Integer, Film> allFilms = new HashMap<>();
 
-    @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film film) {
-        int id = film.getId();
 
-        if (allFilms.containsKey(id)) {
-            allFilms.put(id, film);
-            log.debug("correct update film {}", film);
-        } else {
-            log.debug("incorrect update film {}", film);
-            throw new NotFoundException("no film with this id");
-        }
-        return film;
-    }
+	private final FilmService filmService;
+	private final UserService userService;
 
-    @PostMapping
-    public Film addFilm(@Valid @RequestBody Film film) {
-        film.setId(allFilms.size() + 1);
-        allFilms.put(allFilms.size() + 1, film);
-        log.debug("correct adding film {}", film);
-        return film;
-    }
+	@Autowired
+	public FilmController(FilmService filmService, UserService userService) {
+		this.filmService = filmService;
+		this.userService = userService;
+	}
 
-    @GetMapping
-    public List<Film> getAllFilms() {
-        log.debug("get all films");
-        return new ArrayList<>(allFilms.values());
-    }
+	@PutMapping
+	public Film updateFilm(@Valid @RequestBody Film film) {
+		return filmService.updateFilm(film);
+	}
+
+	@PostMapping
+	public Film addFilm(@Valid @RequestBody Film film) {
+		return filmService.addFilm(film);
+	}
+
+	@GetMapping
+	public List<Film> getAllFilms() {
+		log.debug("get all films");
+		return filmService.getAllFilms();
+	}
+
+	@GetMapping("{filmId}")
+	public Film getFilmById(@PathVariable Integer filmId) {
+		return filmService.getFilmById(filmId);
+	}
+
+
+	@PutMapping("{id}/like/{userId}")
+	public Film likeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
+		return filmService.like(id, userId, userService, true);
+	}
+
+	@DeleteMapping("{id}/like/{userId}")
+	public Film unlikeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
+		return filmService.like(id, userId, userService, false);
+	}
+
+	@GetMapping("popular")
+	public List<Film> mostPopularFilms(@RequestParam Optional<String> count) {
+		//I know about defaultValue, Optional use for logging
+		log.debug("get first {} most popular films", count.orElse("(quantity not specified, so 10)"));
+		return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
+	}
+
+	@ExceptionHandler
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ErrorResponse handle(final MethodArgumentNotValidException e) {
+		return new ErrorResponse(
+				"Data validation error", e.getMessage()
+		);
+	}
+
+	@ExceptionHandler
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public ErrorResponse handle(final RuntimeException e) {
+		return new ErrorResponse(
+				"No data found", e.getMessage()
+		);
+	}
 
 }
 
