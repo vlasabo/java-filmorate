@@ -19,6 +19,7 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -217,7 +218,7 @@ public class FilmControllerTests {
 				.andExpect(status().isOk());
 		film.setId(1);
 
-		User user = new User("aa@bb.com", "login", "name", LocalDate.ofEpochDay(1));
+		User user = new User("aa@bb.com", "login", "name", LocalDate.from(Instant.ofEpochSecond(1)));
 		requestBody = objectMapper.writeValueAsString(user);
 		this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON));
 
@@ -242,7 +243,7 @@ public class FilmControllerTests {
 				.andExpect(status().isOk());
 		film.setId(1);
 
-		User user = new User("aa@bb.com", "login", "name", LocalDate.ofEpochDay(1));
+		User user = new User("aa@bb.com", "login", "name", LocalDate.from(Instant.ofEpochSecond(1)));
 		requestBody = objectMapper.writeValueAsString(user);
 		this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON));
 
@@ -279,7 +280,7 @@ public class FilmControllerTests {
 		var setLikes = new HashSet<Integer>();
 		setLikes.add(1);
 		film.setLikes(setLikes);
-		User user = new User("aa@bb.com", "login", "name", LocalDate.ofEpochDay(1));
+		User user = new User("aa@bb.com", "login", "name", LocalDate.from(Instant.ofEpochSecond(1)));
 		requestBody = objectMapper.writeValueAsString(user);
 		this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON));
 

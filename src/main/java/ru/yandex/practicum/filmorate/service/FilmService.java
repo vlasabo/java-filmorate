@@ -19,9 +19,9 @@ public class FilmService {
 	private final FilmStorage filmStorage;
 
 	@Autowired
-	public FilmService(FilmStorage filmStorage) {
-		this.filmStorage = filmStorage;
-	}
+    public FilmService(FilmStorage filmDbStorage) {
+        this.filmStorage = filmDbStorage;
+    }
 
 	public Film like(int filmId, int userId, UserService userService, boolean like) {
 		Film film = getFilmById(filmId);

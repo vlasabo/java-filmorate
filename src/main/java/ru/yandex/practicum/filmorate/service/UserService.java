@@ -18,8 +18,8 @@ public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
+    public UserService(UserStorage userDbStorage) {
+        this.userStorage = userDbStorage;
     }
 
     public User getUserById(int userId) {
