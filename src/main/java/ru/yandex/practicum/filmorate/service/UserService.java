@@ -23,9 +23,11 @@ public class UserService {
     }
 
     public User getUserById(int userId) {
-        Optional<User> userOptional = userStorage.getAllUsers().stream().filter(u -> u.getId() == userId).findFirst();
+        Optional<User> userOptional = userStorage.findUserById(userId);
         if (userOptional.isPresent()) {
-            return userOptional.get();
+            User user = userOptional.get();
+            user.setFriends(userStorage.findALlFriends(user));
+            return user;
         } else {
             log.debug("User by id {} not found", userId);
             throw new NotFoundException(String.format("User by id %d not found", userId));
@@ -36,36 +38,42 @@ public class UserService {
     public User addFriend(int userId, int friendId, boolean add) {
         User user = getUserById(userId);
         if (add) { //this "if" only for log
-            checkMutuallyAndAddOrRemoveFriend(userId, friendId, true);
+            user = checkMutuallyAndAddOrRemoveFriend(user, friendId, true);
             log.debug("User {} add friend {}", userId, friendId);
         } else {
-            checkMutuallyAndAddOrRemoveFriend(userId, friendId, false);
+            user = checkMutuallyAndAddOrRemoveFriend(user, friendId, false);
             log.debug("User {} remove friend {}", userId, friendId);
         }
         return user;
     }
 
-    private void checkMutuallyAndAddOrRemoveFriend(int userId1, int userId2, boolean add) {
+    private User checkMutuallyAndAddOrRemoveFriend(User user, int userId2, boolean add) {
         if (add) {
-            if (getUserById(userId2).getFriends().containsKey(userId1)) {
-                getUserById(userId2).addFriend(userId1, true);
-                getUserById(userId1).addFriend(userId2, true);
+            if (getUserById(userId2).getFriends().containsKey(user.getId())) {
+                getUserById(userId2).addFriend(user.getId(), true);
+                user.addFriend(userId2, true);
+                userStorage.updateFriendship(getUserById(userId2), user, true);
             } else {
-                getUserById(userId1).addFriend(userId2, false);
+                user.addFriend(userId2, false);
+                userStorage.updateFriendship(user, getUserById(userId2), false);
             }
         } else {
-            if (getUserById(userId2).getFriends().containsKey(userId1)) {
-                getUserById(userId2).addFriend(userId1, false);
-                getUserById(userId1).deleteFriend(userId2);
+            if (getUserById(userId2).getFriends().containsKey(user.getId())) {
+                getUserById(userId2).addFriend(user.getId(), false);
+                userStorage.updateFriendship(user, getUserById(userId2), false);
+                user.deleteFriend(userId2);
+                userStorage.removeFriends(user, getUserById(userId2));
             } else {
-                getUserById(userId1).deleteFriend(userId2);
+                user.deleteFriend(userId2);
+                userStorage.removeFriends(user, getUserById(userId2));
             }
         }
+        return user;
     }
 
     public List<User> getAllFriends(int userId) {
         User user = getUserById(userId);
-        Map<Integer, Boolean> allFriendsId = user.getFriends();
+        Map<Integer, Boolean> allFriendsId = userStorage.findALlFriends(user);
         return allFriendsId.keySet().stream().map(this::getUserById).collect(Collectors.toList());
     }
 

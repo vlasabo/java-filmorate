@@ -15,6 +15,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,10 @@ public class UserDbStorage implements UserStorage {
             "insert into users (email, login, name, birthday) values (?, ?, ?, ?)";
     private static final String SQL_UPDATE_USER =
             "merge into users (id, email, login, name, birthday) values (?, ?, ?, ?, ?)";
+    private static final String SQL_DELETE_FRIENDSHIP =
+            "DELETE FROM users_friendship WHERE (USER1_ID = ? and USER2_ID = ?) OR (USER2_ID = ? and USER1_ID = ?)";
+    private static final String SQL_WRITE_FRIENDSHIP =
+            "insert into users_friendship (user1_id, user2_id , mutually) values (?, ?, ?)";
 
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -87,9 +92,33 @@ public class UserDbStorage implements UserStorage {
         return Optional.of(user);
     }
 
+
     private void setName(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
     }
+
+    @Override
+    public void updateFriendship(User user1, User user2, Boolean mutually) {
+        jdbcTemplate.update(SQL_DELETE_FRIENDSHIP, user1.getId(), user2.getId(), user1.getId(), user2.getId());
+        jdbcTemplate.update(SQL_WRITE_FRIENDSHIP, user1.getId(), user2.getId(), mutually);
+        log.debug("correct update friendship for  users {}, {}", user1.getId(), user2.getId());
+    }
+
+    @Override
+    public HashMap<Integer, Boolean> findALlFriends(User user) {
+        HashMap<Integer, Boolean> friendsMap = new HashMap<>();
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet("SELECT * FROM users_friendship WHERE USER1_ID = ?", user.getId());
+        while (userRows.next()) {
+            friendsMap.put(userRows.getInt("user2_id"), userRows.getBoolean("mutually"));
+        }
+        return friendsMap;
+    }
+
+    @Override
+    public void removeFriends(User user1, User user2) {
+        jdbcTemplate.update("DELETE FROM users_friendship WHERE (USER1_ID = ? and USER2_ID = ?)", user1.getId(), user2.getId());
+    }
+
 }
