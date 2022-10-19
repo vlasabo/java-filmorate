@@ -23,15 +23,20 @@ import java.util.Optional;
 @Slf4j
 @Qualifier("userDbStorage")
 public class UserDbStorage implements UserStorage {
+
     private final JdbcTemplate jdbcTemplate;
+    private static final String SQL_SELECT_ALL_FROM_USERS = "select * from users";
     private static final String SQL_INSERT_NEW_USER =
             "insert into users (email, login, name, birthday) values (?, ?, ?, ?)";
     private static final String SQL_UPDATE_USER =
             "merge into users (id, email, login, name, birthday) values (?, ?, ?, ?, ?)";
     private static final String SQL_DELETE_FRIENDSHIP =
             "DELETE FROM users_friendship WHERE (USER1_ID = ? and USER2_ID = ?) OR (USER2_ID = ? and USER1_ID = ?)";
+    private static final String SQL_REMOVE_FRIEND =
+            "DELETE FROM users_friendship WHERE (USER1_ID = ? and USER2_ID = ?)";
     private static final String SQL_WRITE_FRIENDSHIP =
             "insert into users_friendship (user1_id, user2_id , mutually) values (?, ?, ?)";
+    private static final String SQL_FIND_ALL_FRIENDS = "SELECT * FROM users_friendship WHERE USER1_ID = ?";
 
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -59,7 +64,7 @@ public class UserDbStorage implements UserStorage {
     @Override
     public List<User> getAllUsers() {
         ArrayList<User> allUsers = new ArrayList<>();
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users");
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet(SQL_SELECT_ALL_FROM_USERS);
         while (userRows.next()) {
             User user = new User(userRows.getString("email"), userRows.getString("login")
                     , userRows.getString("name"), userRows.getDate("birthday").toLocalDate());
@@ -84,11 +89,11 @@ public class UserDbStorage implements UserStorage {
     }
 
     public Optional<User> findUserById(int id) {
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users where id = ?", id);
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet(SQL_SELECT_ALL_FROM_USERS + " where id = ?", id);
         userRows.next();
-        User user = new User(userRows.getString("email"), userRows.getString("LOGIN")
-                , userRows.getString("NAME"), userRows.getDate("BIRTHDAY").toLocalDate());
-        user.setId(userRows.getInt("ID"));
+        User user = new User(userRows.getString("email"), userRows.getString("login")
+                , userRows.getString("name"), userRows.getDate("birthday").toLocalDate());
+        user.setId(userRows.getInt("id"));
         return Optional.of(user);
     }
 
@@ -109,7 +114,7 @@ public class UserDbStorage implements UserStorage {
     @Override
     public HashMap<Integer, Boolean> findALlFriends(User user) {
         HashMap<Integer, Boolean> friendsMap = new HashMap<>();
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("SELECT * FROM users_friendship WHERE USER1_ID = ?", user.getId());
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet(SQL_FIND_ALL_FRIENDS, user.getId());
         while (userRows.next()) {
             friendsMap.put(userRows.getInt("user2_id"), userRows.getBoolean("mutually"));
         }
@@ -118,7 +123,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void removeFriends(User user1, User user2) {
-        jdbcTemplate.update("DELETE FROM users_friendship WHERE (USER1_ID = ? and USER2_ID = ?)", user1.getId(), user2.getId());
+        jdbcTemplate.update(SQL_REMOVE_FRIEND, user1.getId(), user2.getId());
     }
 
 }
