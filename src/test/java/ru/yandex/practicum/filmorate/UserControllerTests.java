@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
@@ -16,7 +17,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class UserControllerTests {
 
-    private final static LocalDate BIRTHDAY_DATE = LocalDate.from(Instant.ofEpochSecond(86400));
+    private final static LocalDate BIRTHDAY_DATE = LocalDate.of(1990, 2, 23);
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,6 +42,7 @@ public class UserControllerTests {
     private UserController userController;
 
     @SpyBean
+    @Qualifier("userDbStorage")
     private InMemoryUserStorage userStorage;
 
     @SpyBean
@@ -49,7 +50,7 @@ public class UserControllerTests {
 
 
     @Test
-    @Order(1)
+    @Order(2)
     void createNewUserWithNullNameAndAddThisUserWithNameEqualsLogin() throws Exception {
         User user = new User("aa@bb.com", "login", null, BIRTHDAY_DATE);
         String requestBody = objectMapper.writeValueAsString(user);
@@ -67,13 +68,13 @@ public class UserControllerTests {
     }
 
     @Test
-    @Order(2)
+    @Order(1)
     void createTwoNewUsersAndCompareWithListFromControllerReceivedRequestGet() throws Exception {
         User user = new User("aa@bb.com", "login", "name", BIRTHDAY_DATE);
         String requestBody = objectMapper.writeValueAsString(user);
         this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON));
 
-        User user2 = new User("aa@bb2.com", "login2", "name2", LocalDate.from(Instant.ofEpochSecond(86400 * 2)));
+        User user2 = new User("aa@bb2.com", "login2", "name2", LocalDate.ofEpochDay(1));
         requestBody = objectMapper.writeValueAsString(user2);
         this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON));
 
@@ -97,7 +98,7 @@ public class UserControllerTests {
     @Test
     @Order(4)
     void createNewUserWithEmptyStringOrNullLoginExpectingStatus400() throws Exception {
-        User user = new User("aa@bb.com", "", "name", LocalDate.from(Instant.ofEpochSecond(86400)));
+        User user = new User("aa@bb.com", "", "name", LocalDate.ofEpochDay(1));
         User user2 = new User("aa@bb.com", null, "name", BIRTHDAY_DATE);
         String requestBody = objectMapper.writeValueAsString(user);
 
@@ -117,7 +118,7 @@ public class UserControllerTests {
     @Test
     @Order(5)
     void createNewUserWithIncorrectBirthdayDateExpectingStatus400() throws Exception {
-        User user = new User("aa@bb.com", "login", "name", LocalDate.from(Instant.now()));
+        User user = new User("aa@bb.com", "login", "name", LocalDate.now());
         String requestBody = objectMapper.writeValueAsString(user);
 
         this.mockMvc.perform(post("/users")
@@ -208,7 +209,7 @@ public class UserControllerTests {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        user.setBirthday(LocalDate.from(Instant.now()));
+        user.setBirthday(LocalDate.now());
         user.setId(1);
         requestBody = objectMapper.writeValueAsString(user);
         this.mockMvc.perform(put("/users")
@@ -283,11 +284,13 @@ public class UserControllerTests {
 
         String answer = response.getResponse().getContentAsString();
         var friendsSet = new HashMap<Integer, Boolean>();
-        friendsSet.put(1, false);
+
         user2.setId(2);
         user3.setId(3);
-        user2.setFriends(friendsSet);
-        user3.setFriends(friendsSet);
+        friendsSet.put(2, false);
+        friendsSet.put(3, false);
+        user.setFriends(friendsSet);
+
         Assertions.assertEquals(answer, objectMapper.writeValueAsString(Stream.of(user2, user3).collect(Collectors.toList())));
     }
 
@@ -309,10 +312,13 @@ public class UserControllerTests {
         var response = this.mockMvc.perform(get("/users/1/friends"))
                 .andExpect(status().isOk()).andReturn();
         String answer = response.getResponse().getContentAsString();
+
         var friendsSet = new HashMap<Integer, Boolean>();
-        friendsSet.put(1, false);
+        friendsSet.put(2, false);
+        user.setId(1);
         user2.setId(2);
-        user2.setFriends(friendsSet);
+        user.setFriends(friendsSet);
+
         Assertions.assertEquals(answer, objectMapper.writeValueAsString(Stream.of(user2).collect(Collectors.toList())));
 
         this.mockMvc.perform(delete("/users/1/friends/2"));
@@ -362,18 +368,22 @@ public class UserControllerTests {
         requestBody = objectMapper.writeValueAsString(user3);
         this.mockMvc.perform(post("/users").content(requestBody).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-
-        this.mockMvc.perform(put("/users/1/friends/2"));
-        this.mockMvc.perform(put("/users/1/friends/3"));
         user.setId(1);
+        user2.setId(2);
+        user3.setId(3);
+        this.mockMvc.perform(put("/users/1/friends/2"));
+        this.mockMvc.perform(put("/users/3/friends/2"));
+        this.mockMvc.perform(put("/users/2/friends/1"));
+        this.mockMvc.perform(put("/users/2/friends/3"));
+
         var setFriends = new HashMap<Integer, Boolean>();
-        setFriends.put(2, false);
-        setFriends.put(3, false);
-        user.setFriends(setFriends);
-        var response = this.mockMvc.perform(get("/users/2/friends/common/3"))
+        setFriends.put(1, true);
+        setFriends.put(3, true);
+        user2.setFriends(setFriends);
+        var response = this.mockMvc.perform(get("/users/1/friends/common/3"))
                 .andExpect(status().isOk()).andReturn();
         String answer = response.getResponse().getContentAsString();
-        Assertions.assertEquals(answer, objectMapper.writeValueAsString(List.of(user)));
+        Assertions.assertEquals(answer, objectMapper.writeValueAsString(List.of(user2)));
     }
 
 }
