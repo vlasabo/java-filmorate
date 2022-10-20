@@ -30,9 +30,11 @@ public class FilmService {
 		userService.getUserById(userId); //check user exist
 		if (like) {
 			film.addLike(userId);
+			filmStorage.addLike(filmId, userId);
 			log.debug("add like to film with id={} from user with id={}", filmId, userId);
 		} else {
 			film.removeLike(userId);
+			filmStorage.removeLike(filmId, userId);
 			log.debug("remove like to film with id={} from user with id={}", filmId, userId);
 		}
 		return film;

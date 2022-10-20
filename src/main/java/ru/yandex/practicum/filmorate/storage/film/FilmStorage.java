@@ -26,4 +26,10 @@ public interface FilmStorage {
     List<Mpa> getAllMpa();
 
     Mpa getMpaById(Integer mpaId);
+
+    void addLike(int filmId, int userId);
+
+    void removeLike(int filmId, int userId);
+
+    List<Film> topNFilms(int count);
 }

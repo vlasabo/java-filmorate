@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dao;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -12,13 +13,12 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
 import ru.yandex.practicum.filmorate.model.film_attributes.Mpa;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -27,6 +27,9 @@ import java.util.stream.Collectors;
 public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private UserStorage userStorage;
 
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -54,6 +57,12 @@ public class FilmDbStorage implements FilmStorage {
     private static final String SQL_ADD_FILM_GENRES =
             "INSERT INTO films_genres (film_id, genre_id) VALUES (?, ?)";
 
+    private static final String SQL_ADD_FILM_LIKE =
+            "INSERT INTO likes_film (film_id, user_id) VALUES (?, ?)";
+
+    private static final String SQL_REMOVE_FILM_LIKE =
+            "DELETE FROM likes_film WHERE (film_id= ? AND user_id= ?) ";
+
     @Override
     public Film addFilm(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -70,10 +79,10 @@ public class FilmDbStorage implements FilmStorage {
         film.setMpa(getMpaById(film.getMpa().getId())); //in Java object
         updateMpaForFilmInDb(film.getId(), film.getMpa().getId()); //in DB
 
-        var newGenresList = film.getGenres().stream()
+        var newGenresList = film.getGenres().stream().distinct()
                 .map(g -> getGenreById(g.getId())).collect(Collectors.toList());
         film.setGenres(new ArrayList<>(newGenresList)); //in Java object
-        updateGenresForFilmInDb(film.getId(), film.getGenres().stream().map(genre -> //in DB
+        updateGenresForFilmInDb(film.getId(), newGenresList.stream().distinct().map(genre -> //in DB
                 genre.getId()).collect(Collectors.toList()));
         log.debug("correct adding film {}", film);
 
@@ -109,10 +118,10 @@ public class FilmDbStorage implements FilmStorage {
             film.setMpa(getMpaById(film.getMpa().getId())); //in Java object
             updateMpaForFilmInDb(film.getId(), film.getMpa().getId()); //in DB
 
-            var newGenresList = film.getGenres().stream()
+            var newGenresList = film.getGenres().stream().distinct()
                     .map(g -> getGenreById(g.getId())).collect(Collectors.toList());
             film.setGenres(new ArrayList<>(newGenresList)); //in Java object
-            updateGenresForFilmInDb(film.getId(), film.getGenres().stream().map(genre -> //in DB
+            updateGenresForFilmInDb(film.getId(), newGenresList.stream().distinct().map(genre ->
                     genre.getId()).collect(Collectors.toList()));
             log.debug("correct update film {}", film);
         } else {
@@ -158,12 +167,47 @@ public class FilmDbStorage implements FilmStorage {
         return new Mpa(userRows.getString("mpa_name"), userRows.getInt("id"));
     }
 
+    @Override
+    public void addLike(int filmId, int userId) {
+        removeLike(filmId, userId);
+        jdbcTemplate.update(SQL_ADD_FILM_LIKE, filmId, userId);
+    }
+
+    @Override
+    public void removeLike(int filmId, int userId) {
+        jdbcTemplate.update(SQL_REMOVE_FILM_LIKE, filmId, userId);
+    }
+
+    @Override
+    public List<Film> topNFilms(int count) {
+        List<Film> topFilms = new ArrayList<>();
+        SqlRowSet likesRows = jdbcTemplate.queryForRowSet("SELECT FILM_ID  FROM LIKES_FILM lf GROUP BY FILM_ID " +
+                "ORDER BY COUNT( USER_ID) DESC LIMIT ?", count);
+        while (likesRows.next()) {
+            Optional<Film> filmOptional = getFilmById(likesRows.getInt("film_id"));
+            if (filmOptional.isPresent()) {
+                topFilms.add(filmOptional.get());
+            }
+        }
+        return topFilms;
+    }
+
+    private Set<Integer> getSetLikesForFilmFromDb(int filmId) {
+        Set<Integer> likes = new HashSet<>();
+        SqlRowSet likesRows = jdbcTemplate.queryForRowSet("SELECT user_id FROM likes_film WHERE film_id = ?", filmId);
+        while (likesRows.next()) {
+            likes.add(likesRows.getInt("user_id"));
+        }
+        return likes;
+    }
+
     private Film getFilmFromRow(SqlRowSet filmRows) {
         Film film = new Film(filmRows.getString("name"), filmRows.getString("description")
                 , filmRows.getDate("release_date").toLocalDate(), filmRows.getInt("duration"));
         film.setId(filmRows.getInt("id"));
         film.setGenres(getGenresForFilmId(film.getId()));
         film.setMpa(getMpaForFilmId(film.getId()));
+        film.setLikes(getSetLikesForFilmFromDb(film.getId()));
         return film;
     }
 
@@ -193,4 +237,6 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(SQL_DELETE_FILM_MPA, filmId);
         jdbcTemplate.update(SQL_ADD_FILM_MPA, filmId, filmMpaId);
     }
+
+
 }
