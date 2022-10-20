@@ -2,11 +2,12 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
-import ru.yandex.practicum.filmorate.model.film_attributes.Genres;
+import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
 import ru.yandex.practicum.filmorate.model.film_attributes.Mpa;
 import ru.yandex.practicum.filmorate.validators.ValidFilmDate;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -18,8 +19,9 @@ import java.util.Set;
 public class Film {
 
     private int id;
+    @NotNull
     private Mpa mpa;
-    private final ArrayList<Genres> genres = new ArrayList<>();
+    private ArrayList<Genre> genres = new ArrayList<>();
     @NotEmpty(message = "NAME IS EMPTY")
     private final String name;
     @Length(max = 200, message = "LENGTH OF DESCRIPTION IS OVER 200")
@@ -48,4 +50,5 @@ public class Film {
     public int howManyLikes() {
         return likes.size();
     }
+
 }

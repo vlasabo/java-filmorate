@@ -90,11 +90,14 @@ public class UserDbStorage implements UserStorage {
 
     public Optional<User> findUserById(int id) {
         SqlRowSet userRows = jdbcTemplate.queryForRowSet(SQL_SELECT_ALL_FROM_USERS + " where id = ?", id);
-        userRows.next();
-        User user = new User(userRows.getString("email"), userRows.getString("login")
-                , userRows.getString("name"), userRows.getDate("birthday").toLocalDate());
-        user.setId(userRows.getInt("id"));
-        return Optional.of(user);
+        if (userRows.next()) {
+            User user = new User(userRows.getString("email"), userRows.getString("login")
+                    , userRows.getString("name"), userRows.getDate("birthday").toLocalDate());
+            user.setId(userRows.getInt("id"));
+            return Optional.of(user);
+        } else {
+            return Optional.empty();
+        }
     }
 
 

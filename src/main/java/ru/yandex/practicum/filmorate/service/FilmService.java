@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
+import ru.yandex.practicum.filmorate.model.film_attributes.Mpa;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Comparator;
@@ -69,4 +71,19 @@ public class FilmService {
 		return filmStorage.updateFilm(film);
 	}
 
+	public List<Genre> getAllGenres() {
+		return filmStorage.getAllGenres();
+	}
+
+	public Genre getGenreById(Integer genreId) {
+		return filmStorage.getGenreById(genreId);
+	}
+
+	public List<Mpa> getAllMpa() {
+		return filmStorage.getAllMpa();
+	}
+
+	public Mpa getMpaById(Integer mpaId) {
+		return filmStorage.getMpaById(mpaId);
+	}
 }
