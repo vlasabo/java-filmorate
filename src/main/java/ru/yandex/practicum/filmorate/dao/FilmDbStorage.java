@@ -145,8 +145,11 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Genre getGenreById(int genreid) {
         SqlRowSet userRows = jdbcTemplate.queryForRowSet(SQL_FIND_ALL_GENRES + " where genre_id=?", genreid);
-        userRows.next();
-        return new Genre(userRows.getString("genre_name"), userRows.getInt("genre_id"));
+        if (userRows.next()) {
+            return new Genre(userRows.getString("genre_name"), userRows.getInt("genre_id"));
+        } else {
+            throw new NotFoundException("incorrect genre id!");
+        }
     }
 
     @Override
@@ -163,8 +166,11 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Mpa getMpaById(Integer mpaId) {
         SqlRowSet userRows = jdbcTemplate.queryForRowSet(SQL_FIND_ALL_MPA + " where id=?", mpaId);
-        userRows.next();
-        return new Mpa(userRows.getString("mpa_name"), userRows.getInt("id"));
+        if (userRows.next()) {
+            return new Mpa(userRows.getString("mpa_name"), userRows.getInt("id"));
+        } else {
+            throw new NotFoundException("incorrect MPA id!");
+        }
     }
 
     @Override
