@@ -236,7 +236,19 @@ public class FilmDbStorage implements FilmStorage {
 
     private void updateGenresForFilmInDb(int filmId, List<Integer> genresId) {
         jdbcTemplate.update(SQL_DELETE_FILM_GENRES, filmId);
-        genresId.stream().forEach(genre -> jdbcTemplate.update(SQL_ADD_FILM_GENRES, filmId, genre));
+        if (genresId.size() == 0) {
+            return;
+        }
+
+        var allGenresList = getAllGenres();
+        var necessaryGenresIntList = allGenresList.stream().filter(g -> genresId.contains(g.getId()))
+                .map(g -> g.getId()).collect(Collectors.toList());
+        StringBuilder sb = new StringBuilder("INSERT INTO films_genres (film_id, genre_id) VALUES ");
+        for (int g : necessaryGenresIntList) {
+            sb.append("(").append(filmId).append(" , ").append(g).append("),");
+        }
+        String query = sb.replace(sb.length() - 1, sb.length(), ";").toString();
+        jdbcTemplate.update(query);
     }
 
     private void updateMpaForFilmInDb(int filmId, int filmMpaId) {
