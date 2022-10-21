@@ -38,16 +38,16 @@ public class UserService {
     public User addFriend(int userId, int friendId, boolean add) {
         User user = getUserById(userId);
         if (add) { //this "if" only for log
-            user = checkMutuallyAndAddOrRemoveFriend(user, friendId, true);
+            checkMutuallyAndAddOrRemoveFriend(user, friendId, true);
             log.debug("User {} add friend {}", userId, friendId);
         } else {
-            user = checkMutuallyAndAddOrRemoveFriend(user, friendId, false);
+            checkMutuallyAndAddOrRemoveFriend(user, friendId, false);
             log.debug("User {} remove friend {}", userId, friendId);
         }
         return user;
     }
 
-    private User checkMutuallyAndAddOrRemoveFriend(User user, int userId2, boolean add) {
+    private void checkMutuallyAndAddOrRemoveFriend(User user, int userId2, boolean add) {
         if (add) {
             if (getUserById(userId2).getFriends().containsKey(user.getId())) {
                 getUserById(userId2).addFriend(user.getId(), true);
@@ -61,14 +61,10 @@ public class UserService {
             if (getUserById(userId2).getFriends().containsKey(user.getId())) {
                 getUserById(userId2).addFriend(user.getId(), false);
                 userStorage.updateFriendship(user, getUserById(userId2), false);
-                user.deleteFriend(userId2);
-                userStorage.removeFriends(user, getUserById(userId2));
-            } else {
-                user.deleteFriend(userId2);
-                userStorage.removeFriends(user, getUserById(userId2));
             }
+            user.deleteFriend(userId2);
+            userStorage.removeFriends(user, getUserById(userId2));
         }
-        return user;
     }
 
     public List<User> getAllFriends(int userId) {

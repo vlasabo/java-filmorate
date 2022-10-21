@@ -94,6 +94,7 @@ public class UserDbStorage implements UserStorage {
             User user = new User(userRows.getString("email"), userRows.getString("login")
                     , userRows.getString("name"), userRows.getDate("birthday").toLocalDate());
             user.setId(userRows.getInt("id"));
+            user.setFriends(findALlFriends(user));
             return Optional.of(user);
         } else {
             return Optional.empty();
@@ -127,6 +128,9 @@ public class UserDbStorage implements UserStorage {
     @Override
     public void removeFriends(User user1, User user2) {
         jdbcTemplate.update(SQL_REMOVE_FRIEND, user1.getId(), user2.getId());
+        if (user2.getFriends().containsKey(user1.getId())) {
+            updateFriendship(user2, user1, false);
+        }
     }
 
 }
