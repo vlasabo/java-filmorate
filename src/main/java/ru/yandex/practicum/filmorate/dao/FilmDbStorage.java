@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.dao;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -17,6 +18,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -243,12 +245,17 @@ public class FilmDbStorage implements FilmStorage {
         var allGenresList = getAllGenres();
         var necessaryGenresIntList = allGenresList.stream().filter(g -> genresId.contains(g.getId()))
                 .map(g -> g.getId()).collect(Collectors.toList());
-        StringBuilder sb = new StringBuilder("INSERT INTO films_genres (film_id, genre_id) VALUES ");
-        for (int g : necessaryGenresIntList) {
-            sb.append("(").append(filmId).append(" , ").append(g).append("),");
-        }
-        String query = sb.replace(sb.length() - 1, sb.length(), ";").toString();
-        jdbcTemplate.update(query);
+        jdbcTemplate.batchUpdate("INSERT INTO films_genres (film_id, genre_id) VALUES (?, ?)",
+                new BatchPreparedStatementSetter() {
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ps.setInt(1, filmId);
+                        ps.setInt(2, necessaryGenresIntList.get(i));
+                    }
+
+                    public int getBatchSize() {
+                        return necessaryGenresIntList.size();
+                    }
+                });
     }
 
     private void updateMpaForFilmInDb(int filmId, int filmMpaId) {
@@ -258,3 +265,4 @@ public class FilmDbStorage implements FilmStorage {
 
 
 }
+

@@ -29,15 +29,10 @@ class UserDaoTests {
 
     @Test
     public void testFindUserById() {
-        User user = new User("test@test.com", "login", "vladimir", LocalDate.ofEpochDay(1));
-        userStorage.addUser(user);
+        addUser(1);
         Optional<User> userOptional = userStorage.findUserById(1);
 
-        assertThat(userOptional)
-                .isPresent()
-                .hasValueSatisfying(userFromStorage ->
-                        assertThat(userFromStorage).hasFieldOrPropertyWithValue("id", 1)
-                );
+        assertThat(userOptional).isPresent().hasValueSatisfying(userFromStorage -> assertThat(userFromStorage).hasFieldOrPropertyWithValue("id", 1));
     }
 
     @Test
@@ -50,36 +45,28 @@ class UserDaoTests {
     public void testFindUserWithIncorrectIdExpectStatus404() {
         Optional<User> userOptional = userStorage.findUserById(999);
 
-        assertThat(userOptional)
-                .isEmpty();
+        assertThat(userOptional).isEmpty();
     }
 
     @Test
     public void testUsersUpdate() {
-        User user1 = new User("test@test1.com", "login1", "vladimir1", LocalDate.ofEpochDay(1));
-        userStorage.addUser(user1);
-        User user2 = new User("test@test2.com", "login2", "vladimir2", LocalDate.ofEpochDay(1));
-        userStorage.addUser(user2);
+        addUser(1);
+        User user2 = addUser(2);
         user2.setId(1);
         userStorage.updateUser(user2);
         Optional<User> userOptional = userStorage.findUserById(1);
 
-        assertThat(userOptional)
-                .isPresent()
-                .hasValueSatisfying(userFromStorage ->
-                        assertThat(userFromStorage).hasFieldOrPropertyWithValue("id", 1)
-                                .hasFieldOrPropertyWithValue("login", "login2")
-                                .hasFieldOrPropertyWithValue("name", "vladimir2")
-                                .hasFieldOrPropertyWithValue("email", "test@test2.com")
-                );
+        assertThat(userOptional).isPresent().hasValueSatisfying(userFromStorage ->
+                assertThat(userFromStorage).hasFieldOrPropertyWithValue("id", 1)
+                        .hasFieldOrPropertyWithValue("login", "login2")
+                        .hasFieldOrPropertyWithValue("name", "vladimir2")
+                        .hasFieldOrPropertyWithValue("email", "test@test2.com"));
     }
 
     @Test
     public void testUsersFriendshipAddAndRemoveAndMutually() {
-        User user1 = new User("test@test1.com", "login1", "vladimir1", LocalDate.ofEpochDay(1));
-        userStorage.addUser(user1);
-        User user2 = new User("test@test2.com", "login2", "vladimir2", LocalDate.ofEpochDay(1));
-        userStorage.addUser(user2);
+        User user1 = addUser(1);
+        User user2 = addUser(2);
         userStorage.updateFriendship(user1, user2, true);
         Optional<User> userOptional = userStorage.findUserById(1);
         Assertions.assertNotEquals(userOptional, Optional.empty());
@@ -102,14 +89,16 @@ class UserDaoTests {
 
     @Test
     public void testGetAllUsers() {
-        User user1 = new User("test@test1.com", "login1", "vladimir1", LocalDate.ofEpochDay(1));
-        userStorage.addUser(user1);
-        User user2 = new User("test@test2.com", "login2", "vladimir2", LocalDate.ofEpochDay(1));
-        userStorage.addUser(user2);
-        user2.setId(1);
-        userStorage.updateUser(user2);
+        addUser(1);
+        addUser(2);
         List<User> userList = userStorage.getAllUsers();
 
         Assertions.assertEquals(userList.size(), 2);
+    }
+
+    private User addUser(int i) {
+        User user = new User("test@test" + i + ".com", "login" + i, "vladimir" + i, LocalDate.ofEpochDay(1));
+        userStorage.addUser(user);
+        return user;
     }
 } 
