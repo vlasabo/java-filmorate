@@ -2,8 +2,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -67,21 +65,7 @@ public class FilmController {
 		return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
 	}
 
-	@ExceptionHandler
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ErrorResponse handle(final MethodArgumentNotValidException e) {
-		return new ErrorResponse(
-				"Data validation error", e.getMessage()
-		);
-	}
 
-	@ExceptionHandler
-	@ResponseStatus(HttpStatus.NOT_FOUND)
-	public ErrorResponse handle(final RuntimeException e) {
-		return new ErrorResponse(
-				"No data found", e.getMessage()
-		);
-	}
 
 }
 
