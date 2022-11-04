@@ -93,13 +93,9 @@ public class FilmService {
         List<Film> allFilmsUserLiked = filmStorage.getAllFilmsUserLiked(userId);
         List<Film> allFilmsFriendLiked = filmStorage.getAllFilmsUserLiked(friendId);
 
-        var resultFilmsList = allFilmsUserLiked.stream()
+        return allFilmsUserLiked.stream()
                 .filter(allFilmsFriendLiked::contains)
                 .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
                 .collect(Collectors.toList());
-        if (resultFilmsList.size() == 0) {
-            throw new NotFoundException("нет фильмов");
-        }
-        return resultFilmsList;
     }
 }

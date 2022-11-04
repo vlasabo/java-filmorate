@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -71,7 +70,6 @@ public class FilmController {
         log.debug("get movies that friends watched, sorted by popularity by userId {} and userId {}", userId, friendId);
         if (!userService.getUserById(userId).getFriends().containsKey(friendId)) {
             log.debug("users with userId {} and userId {} are not friends", userId, friendId);
-            throw new NotFoundException("юзеры не друзья");
         }
 
         return filmService.getMostPopularFilmsIntersectionWithFriend(userId, friendId);
