@@ -92,9 +92,14 @@ public class FilmService {
     public List<Film> getMostPopularFilmsIntersectionWithFriend(int userId, int friendId) {
         List<Film> allFilmsUserLiked = filmStorage.getAllFilmsUserLiked(userId);
         List<Film> allFilmsFriendLiked = filmStorage.getAllFilmsUserLiked(friendId);
-        return allFilmsUserLiked.stream()
+
+        var resultFilmsList = allFilmsUserLiked.stream()
                 .filter(allFilmsFriendLiked::contains)
                 .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
                 .collect(Collectors.toList());
+        if (resultFilmsList.size() == 0) {
+            throw new NotFoundException("нет фильмов");
+        }
+        return resultFilmsList;
     }
 }
