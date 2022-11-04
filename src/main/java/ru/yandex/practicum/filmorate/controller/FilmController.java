@@ -66,8 +66,8 @@ public class FilmController {
         return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
     }
 
-    @GetMapping("common?userId={userId}&friendId={friendId}")
-    public List<Film> mostPopularFilmsIntersectionWithFriend(@PathVariable Integer userId, @PathVariable Integer friendId) {
+    @GetMapping("/common")
+    public List<Film> mostPopularFilmsIntersectionWithFriend(@RequestParam Integer userId, @RequestParam Integer friendId) {
         log.debug("get movies that friends watched, sorted by popularity by userId {} and userId {}", userId, friendId);
         if (!userService.getUserById(userId).getFriends().containsKey(friendId)) {
             log.debug("users with userId {} and userId {} are not friends", userId, friendId);
