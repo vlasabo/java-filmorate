@@ -56,7 +56,7 @@ public class FilmDbStorage implements FilmStorage {
             "INSERT INTO films_mpa (film_id, mpa_id) VALUES (?, ?)";
     private static final String SQL_DELETE_FILM_GENRES =
             "DELETE FROM films_genres WHERE film_id = ?";
-    private static final String SQL_ADD_FILM_GENRES =
+    private static final String SQL_ADD_FILM_GENRES = //TODO: удалить
             "INSERT INTO films_genres (film_id, genre_id) VALUES (?, ?)";
 
     private static final String SQL_ADD_FILM_LIKE =
@@ -64,6 +64,8 @@ public class FilmDbStorage implements FilmStorage {
 
     private static final String SQL_REMOVE_FILM_LIKE =
             "DELETE FROM likes_film WHERE (film_id= ? AND user_id= ?) ";
+
+    private static final String SQL_FIND_ALL_LIKED_FILMS = "SELECT film_id FROM likes_film WHERE user_id = ?";
 
     @Override
     public Film addFilm(Film film) {
@@ -200,6 +202,17 @@ public class FilmDbStorage implements FilmStorage {
         return topFilms;
     }
 
+    @Override
+    public List<Film> getAllFilmsUserLiked(int userId) {
+        List<Film> allFilms = new ArrayList<>();
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(SQL_FIND_ALL_LIKED_FILMS, userId);
+        while (filmRows.next()) {
+            Optional<Film> optFilm = getFilmById(filmRows.getInt("film_id"));
+            optFilm.ifPresent(allFilms::add);
+        }
+        return allFilms;
+    }
+
     private Set<Integer> getSetLikesForFilmFromDb(int filmId) {
         Set<Integer> likes = new HashSet<>();
         SqlRowSet likesRows = jdbcTemplate.queryForRowSet("SELECT user_id FROM likes_film WHERE film_id = ?", filmId);
@@ -242,18 +255,16 @@ public class FilmDbStorage implements FilmStorage {
             return;
         }
 
-        var allGenresList = getAllGenres();
-        var necessaryGenresIntList = allGenresList.stream().filter(g -> genresId.contains(g.getId()))
-                .map(g -> g.getId()).collect(Collectors.toList());
+
         jdbcTemplate.batchUpdate("INSERT INTO films_genres (film_id, genre_id) VALUES (?, ?)",
                 new BatchPreparedStatementSetter() {
                     public void setValues(PreparedStatement ps, int i) throws SQLException {
                         ps.setInt(1, filmId);
-                        ps.setInt(2, necessaryGenresIntList.get(i));
+                        ps.setInt(2, genresId.get(i));
                     }
 
                     public int getBatchSize() {
-                        return necessaryGenresIntList.size();
+                        return genresId.size();
                     }
                 });
     }
