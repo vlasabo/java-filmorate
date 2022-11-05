@@ -200,6 +200,22 @@ public class FilmDbStorage implements FilmStorage {
         return topFilms;
     }
 
+    public List<Film> searchNFilmsByString(String str, int count) {
+        String SQL_SEARCH_FILMS_BY_STRING ="SELECT ff.* " +
+                "FROM (SELECT * FROM films AS f WHERE LOWER(f.name) LIKE ?) AS ff " +
+                "LEFT OUTER JOIN likes_film AS lf ON ff.id = lf.film_id " +
+                "GROUP BY ff.id ORDER BY COUNT(lf.user_id) DESC LIMIT ? ";
+
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(SQL_SEARCH_FILMS_BY_STRING
+                , "%" + str + "%"
+                , count);
+        List<Film> foundFilms = new ArrayList<>();
+        while (filmRows.next()) {
+            foundFilms.add(getFilmFromRow(filmRows));
+        }
+        return foundFilms;
+    }
+
     private Set<Integer> getSetLikesForFilmFromDb(int filmId) {
         Set<Integer> likes = new HashSet<>();
         SqlRowSet likesRows = jdbcTemplate.queryForRowSet("SELECT user_id FROM likes_film WHERE film_id = ?", filmId);
