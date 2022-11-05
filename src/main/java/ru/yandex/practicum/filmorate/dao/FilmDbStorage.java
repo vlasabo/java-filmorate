@@ -65,6 +65,9 @@ public class FilmDbStorage implements FilmStorage {
     private static final String SQL_REMOVE_FILM_LIKE =
             "DELETE FROM likes_film WHERE (film_id= ? AND user_id= ?) ";
 
+    private static final String SQL_REMOVE_FILM_BY_ID =
+            "DELETE FROM films WHERE id = ?";
+
     @Override
     public Film addFilm(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -198,6 +201,11 @@ public class FilmDbStorage implements FilmStorage {
             }
         }
         return topFilms;
+    }
+
+    @Override
+    public void deleteFilm(int id) {
+        jdbcTemplate.update(SQL_REMOVE_FILM_BY_ID, id);
     }
 
     private Set<Integer> getSetLikesForFilmFromDb(int filmId) {

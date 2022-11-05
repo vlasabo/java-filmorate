@@ -65,7 +65,10 @@ public class FilmController {
 		return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
 	}
 
-
+	@DeleteMapping("/{filmId}")
+	public void deleteFilm(@PathVariable Integer filmId){
+		filmService.deleteFilm(filmId);
+	}
 
 }
 

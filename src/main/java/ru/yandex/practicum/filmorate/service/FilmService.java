@@ -88,4 +88,10 @@ public class FilmService {
 	public Mpa getMpaById(Integer mpaId) {
 		return filmStorage.getMpaById(mpaId);
 	}
+
+	public void deleteFilm(int id){
+		getFilmById(id);
+		filmStorage.deleteFilm(id);
+		log.debug("Delete  film {}", id);
+	}
 }
