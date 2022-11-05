@@ -32,4 +32,6 @@ public interface FilmStorage {
     void removeLike(int filmId, int userId);
 
     List<Film> topNFilms(int count);
+
+    List<Film> searchFilmsByString(String query, String searchBy);
 }

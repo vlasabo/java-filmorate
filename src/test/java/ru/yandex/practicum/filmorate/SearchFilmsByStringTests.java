@@ -48,8 +48,6 @@ class SearchFilmsByStringTests {
                 ,  LocalDate.of(1999, 12, 1)));
         users.add(new User("new7@email.com", "login7", "name7"
                 ,  LocalDate.of(1999, 12, 1)));
-        users.add(new User("new8@email.com", "login8", "name8"
-                ,  LocalDate.of(1999, 12, 1)));
 
 
         for (User user : users) {
@@ -102,7 +100,7 @@ class SearchFilmsByStringTests {
     @Test
     public void testFindFilmByString() {
 
-        List<Film> testFilms = filmStorage.searchNFilmsByString("терминатор", 3);
+        List<Film> testFilms = filmStorage.searchFilmsByString("терМИнатор", "title");
         assertThat(testFilms).hasSize(3);
         assertThat(testFilms.get(0)).hasFieldOrPropertyWithValue("id", 3);
         assertThat(testFilms.get(1)).hasFieldOrPropertyWithValue("id", 2);
@@ -111,7 +109,7 @@ class SearchFilmsByStringTests {
 
     @Test
     public void testThatOrderedByLikes() {
-        List<Film> testFilms = filmStorage.searchNFilmsByString("остров", 5);
+        List<Film> testFilms = filmStorage.searchFilmsByString("осТрОВ", "title");
         assertThat(testFilms).hasSize(3);
         assertThat(testFilms.get(0)).hasFieldOrPropertyWithValue("id", 7);
         assertThat(testFilms.get(1)).hasFieldOrPropertyWithValue("id", 5);
@@ -123,8 +121,8 @@ class SearchFilmsByStringTests {
 
     @Test
     public void testFilmNumberOutput() {
-        List<Film> testFilms = filmStorage.searchNFilmsByString("о", 5);
-        assertThat(testFilms).hasSize(5);
+        List<Film> testFilms = filmStorage.searchFilmsByString("о", "title");
+        assertThat(testFilms).hasSize(7);
     }
 
 

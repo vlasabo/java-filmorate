@@ -200,21 +200,74 @@ public class FilmDbStorage implements FilmStorage {
         return topFilms;
     }
 
-    public List<Film> searchNFilmsByString(String str, int count) {
-        String SQL_SEARCH_FILMS_BY_STRING ="SELECT ff.* " +
-                "FROM (SELECT * FROM films AS f WHERE LOWER(f.name) LIKE ?) AS ff " +
-                "LEFT OUTER JOIN likes_film AS lf ON ff.id = lf.film_id " +
-                "GROUP BY ff.id ORDER BY COUNT(lf.user_id) DESC LIMIT ? ";
+    @Override
+    public List<Film> searchFilmsByString(String query, String searchBy) {
+        SqlRowSet filmRows;
 
-        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(SQL_SEARCH_FILMS_BY_STRING
-                , "%" + str + "%"
-                , count);
+        log.info("SearchFilms " + searchBy);
+
+        String lquery = query.toLowerCase();
+
+        switch (searchBy) {
+            case "title":
+                filmRows = searchFilmsByTitle(lquery);
+                break;
+            case "director":
+                log.info("SearchFilms: Director is  Not implemented");
+                filmRows = searchFilmsByDirector(lquery);
+                break;
+            case "both":
+                log.info("SearchFilms: Both is Not implemented");
+                filmRows = searchFilmsByDirTitle(lquery);
+                break;
+            default:
+                throw new RuntimeException("Invalid argument searchBy: " + searchBy);
+        }
+
         List<Film> foundFilms = new ArrayList<>();
         while (filmRows.next()) {
             foundFilms.add(getFilmFromRow(filmRows));
         }
         return foundFilms;
     }
+
+    private SqlRowSet searchFilmsByTitle(String query) {
+        String SQL_SEARCH_BY_TITLE = "SELECT f.* " +
+                "FROM (SELECT * FROM films AS fs WHERE LOWER(fs.name) LIKE ?) AS f " +
+                "LEFT OUTER JOIN likes_film AS lf ON f.id = lf.film_id " +
+                "GROUP BY f.id ORDER BY COUNT(lf.user_id) DESC";
+
+        return jdbcTemplate.queryForRowSet(SQL_SEARCH_BY_TITLE, "%" + query + "%");
+    }
+
+    private SqlRowSet searchFilmsByDirector(String query) {
+
+//        throw new RuntimeException("SearchFilms: Director is Not implemented");
+        String SQL_SEARCH_BY_DIRECTOR = "SELECT f.* " +
+                "FROM (SELECT * FROM directors AS ds WHERE LOWER(ds.name) LIKE ?) AS d " +
+                "LEFT OUTER JOIN directors_films AS df ON d.id = df.director_id " +
+                "LEFT OUTER JOIN films AS f ON df.film_id = f.id " +
+                "LEFT OUTER JOIN likes_film AS lf ON f.id = lf.film_id " +
+                "GROUP BY f.id ORDER BY COUNT(lf.user_id) DESC";
+
+        return jdbcTemplate.queryForRowSet(SQL_SEARCH_BY_DIRECTOR, "%" + query + "%");
+    }
+
+    private SqlRowSet searchFilmsByDirTitle(String query) {
+//        throw new RuntimeException("SearchFilms: Both is Not implemented");
+        String SQL_SEARCH_BY_DIR_TITLE = "SELECT f.* " +
+                "FROM (SELECT * FROM directors AS ds WHERE LOWER(ds.name) LIKE ?) AS d " +
+                "LEFT OUTER JOIN directors_films AS df ON d.id = df.director_id " +
+                "LEFT OUTER JOIN (SELECT * FROM films AS fs WHERE LOWER(fs.name) LIKE ?) " +
+                "AS f ON df.film_id = f.id " +
+                "LEFT OUTER JOIN likes_film AS lf ON f.id = lf.film_id " +
+                "GROUP BY f.id ORDER BY COUNT(lf.user_id) DESC";
+
+        return jdbcTemplate.queryForRowSet(SQL_SEARCH_BY_DIR_TITLE
+                , "%" + query + "%"
+                , "%" + query + "%");
+    }
+
 
     private Set<Integer> getSetLikesForFilmFromDb(int filmId) {
         Set<Integer> likes = new HashSet<>();
