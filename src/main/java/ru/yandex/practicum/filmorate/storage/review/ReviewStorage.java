@@ -9,6 +9,7 @@ public interface ReviewStorage {
     Review add(Review review);
     Review update(Review review);
     Review get(int id);
+    void remove(int id);
 
     void like(int id, int userId);
     void dislike(int id, int userId);

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,18 +26,23 @@ public class ReviewController {
     }
 
     @PostMapping("/reviews")
-    public Review postReview(@RequestBody Review review){
+    public Review postReview(@Valid @RequestBody Review review){
         return reviewService.addReview(review);
     }
 
     @PutMapping("/reviews")
-    public Review putReview(@RequestBody Review review){
+    public Review putReview(@Valid @RequestBody Review review){
         return reviewService.updateReview(review);
     }
 
     @GetMapping("/reviews/{id}")
     public Review getReview(@PathVariable int id){
         return reviewService.getReview(id);
+    }
+
+    @DeleteMapping("reviews/{id}")
+    public void removeReview(@PathVariable int id){
+        reviewService.removeReview(id);
     }
 
     @PutMapping("/reviews/{id}/like/{userId}")

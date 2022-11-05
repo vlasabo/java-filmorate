@@ -37,6 +37,10 @@ public class ReviewService {
         return storage.get(id);
     }
 
+    public void removeReview(int id) {
+        storage.remove(id);
+    }
+
     public void addLike(int id, int userId) {
         storage.like(id, userId);
     }
@@ -52,4 +56,5 @@ public class ReviewService {
     public void deleteDislike(int id, int userId) {
         storage.deleteDislike(id, userId);
     }
+
 }
