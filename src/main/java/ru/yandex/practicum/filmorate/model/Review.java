@@ -24,6 +24,7 @@ public class Review {
     @NotNull
     private Integer filmId;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private int useful;
 
 }

@@ -181,7 +181,7 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     private void updateUseful(int id){
-        
+
         String sql =    "SELECT " +
                         "    SUM(GRADE) AS grade " +
                         "FROM LIKES_REVIEW " +
