@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -106,6 +107,9 @@ public class FilmDbStorage implements FilmStorage {
         while (filmRows.next()) {
             allFilms.add(getFilmFromRow(filmRows));
         }
+
+        fillDirectorsFromDb(allFilms);
+
         return allFilms;
     }
 
@@ -206,6 +210,9 @@ public class FilmDbStorage implements FilmStorage {
                 topFilms.add(filmOptional.get());
             }
         }
+
+        fillDirectorsFromDb(topFilms);
+
         return topFilms;
     }
 
@@ -282,6 +289,9 @@ public class FilmDbStorage implements FilmStorage {
             mpaRows.beforeFirst();
             allFilms.add(film);
         }
+
+        fillDirectorsFromDb(allFilms);
+
         return allFilms;
 
     }
@@ -364,6 +374,46 @@ public class FilmDbStorage implements FilmStorage {
                         return directors.size();
                     }
                 });
+
+        log.debug("Updated directors for film id={}", film.getId());
+    }
+
+    private void fillDirectorsFromDb(List<Film> films) {
+
+        if (films.size() == 0){
+            return;
+        }
+
+        List<Integer> ids = films.stream().map(Film::getId).collect(Collectors.toList());
+        String inSql = String.join(",", Collections.nCopies(ids.size(), "?"));
+
+        String sql =    String.format(  "SELECT " +
+                                        "   FD.FILM_ID, " +
+                                        "   D.ID, " +
+                                        "   D.NAME " +
+                                        "FROM FILMS_DIRECTORS FD " +
+                                        "   INNER JOIN DIRECTORS D " +
+                                        "       ON FD.DIRECTOR_ID = D.ID " +
+                                        "WHERE FILM_ID IN (%s) " +
+                                        "ORDER BY FD.FILM_ID", inSql);
+
+        Map<Integer, Film> filmMap = films.stream()
+                .collect(Collectors.toMap(Film::getId, Function.identity()));
+
+        jdbcTemplate.query(
+                sql, rs -> {
+                    Film film = filmMap.get(rs.getInt("film_id"));
+                    film.getDirectors().clear();
+
+                    Director director = new Director();
+                    director.setId(rs.getInt("id"));
+                    director.setName(rs.getString("name"));
+
+                    film.getDirectors().add(director);
+                }
+                , ids.toArray());
+
+        log.debug("Completed directors for films");
     }
 }
 
