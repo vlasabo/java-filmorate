@@ -30,9 +30,6 @@ public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    /*@Autowired
-    private UserStorage userStorage;*/
-
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -221,7 +218,8 @@ public class FilmDbStorage implements FilmStorage {
         return getListFilmsByListId(allFilmsId);
     }
 
-    private List<Film> getListFilmsByListId(List<Integer> ids) {
+    @Override
+    public List<Film> getListFilmsByListId(List<Integer> ids) {
         List<Film> allFilms = new ArrayList<>();
         String stringListFilmsId = "(" + ids.toString().substring(1, ids.toString().length() - 1).replace(" ", "") + ")";
         SqlRowSet likeRows = jdbcTemplate.queryForRowSet("SELECT * FROM likes_film WHERE film_id IN " + stringListFilmsId);

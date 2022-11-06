@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.dao;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -8,19 +10,19 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 @Qualifier("userDbStorage")
 public class UserDbStorage implements UserStorage {
 
@@ -40,9 +42,8 @@ public class UserDbStorage implements UserStorage {
 
     private static final String SQL_DELETE_USER_BY_ID = "DELETE FROM users WHERE id= ?";
 
-    public UserDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
+    @Autowired
+    private final FilmStorage filmStorage;
 
     @Override
     public User addUser(User user) {
@@ -138,6 +139,40 @@ public class UserDbStorage implements UserStorage {
     @Override
     public void deleteUser(int id) {
         jdbcTemplate.update(SQL_DELETE_USER_BY_ID, id);
+    }
+
+    @Override
+    public List<Film> getRecommendations(int userId) {
+        List<Integer> recommendedFilms = new ArrayList<>();
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(queryRecommendations().replace("?", String.valueOf(userId)));
+        while (filmRows.next()) {
+            recommendedFilms.add(filmRows.getInt("film_id"));
+        }
+        return filmStorage.getListFilmsByListId(recommendedFilms);
+    }
+
+    private String queryRecommendations() {
+        return "WITH REQUESTED_USER_FILMS AS " +
+                "(SELECT FL.FILM_ID FROM LIKES_FILM FL WHERE FL.USER_ID = ?), " +
+                "COMMON_FILMS AS " +
+                "(WITH NEIGHBOURS AS " +
+                "(SELECT LIKES.USER_ID FROM LIKES_FILM AS LIKES " +
+                "INNER JOIN REQUESTED_USER_FILMS ON LIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID " +
+                "WHERE LIKES.USER_ID <> ?) " +
+                "SELECT NEIGHBOURS_LIKES.USER_ID, " +
+                "COUNT(NEIGHBOURS_LIKES.FILM_ID) AS COMMON_COUNT " +
+                "FROM LIKES_FILM AS NEIGHBOURS_LIKES " +
+                "INNER JOIN NEIGHBOURS ON NEIGHBOURS.USER_ID = NEIGHBOURS_LIKES.USER_ID " +
+                "INNER JOIN REQUESTED_USER_FILMS ON NEIGHBOURS_LIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID " +
+                "GROUP BY NEIGHBOURS_LIKES.USER_ID " +
+                "LIMIT 5) " +
+                "SELECT SUM(COMMON_FILMS.COMMON_COUNT) AS FILM_WEIGHT, " +
+                "F_LIKES.FILM_ID FROM LIKES_FILM AS F_LIKES " +
+                "INNER JOIN COMMON_FILMS ON F_LIKES.USER_ID = COMMON_FILMS.USER_ID " +
+                "LEFT JOIN REQUESTED_USER_FILMS ON F_LIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID " +
+                "WHERE REQUESTED_USER_FILMS.FILM_ID IS NULL " +
+                "GROUP BY F_LIKES.FILM_ID " +
+                "ORDER BY SUM(COMMON_FILMS.COMMON_COUNT) DESC";
     }
 
 }
