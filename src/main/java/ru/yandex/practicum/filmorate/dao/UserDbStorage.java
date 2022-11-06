@@ -144,18 +144,13 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<Film> getRecommendations(int userId) {
+        List<Integer> rec = new ArrayList<>();
         if (findUserById(userId).isPresent()) {
-            List<Integer> recommendedFilms = jdbcTemplate.query(
-                    queryRecommendations().replace("?", String.valueOf(userId)),
-                    resultSet -> {
-                        List<Integer> rec = new ArrayList<>();
-                        if (resultSet.next()) {
-                            rec.add(resultSet.getInt("film_id"));
-                        }
-                        return rec;
-                    }
-            );
-            return filmStorage.getListFilmsByListId(recommendedFilms);
+            SqlRowSet resultSet = jdbcTemplate.queryForRowSet(queryRecommendations(), userId);
+            while (resultSet.next()) {
+                rec.add(resultSet.getInt("film_id"));
+            }
+            return filmStorage.getListFilmsByListId(rec);
         } else {
             throw new NotFoundException("no user with this id");
         }
@@ -164,7 +159,7 @@ public class UserDbStorage implements UserStorage {
     private String queryRecommendations() {
                 // 1. Сначала получим фильмы, которые лайкнул рассматриваемый юзер, и поместим их в таблицу REQUESTED_USER_FILMS
         return "WITH REQUESTED_USER_FILMS AS " +
-                "(SELECT FL.FILM_ID FROM LIKES_FILM FL WHERE FL.USER_ID = ?), " +
+                "(SELECT FL.FILM_ID FROM LIKES_FILM FL WHERE FL.USER_ID = ?1), " +
                 // 3. Используя таблицы REQUESTED_USER_FILMS и NEIGHBOURS считаем количество совпадающих лайков
                 // у пользователя и его ближайших соседей, оставляя 5 ближайших соседей с наибольшим количеством
                 // совпадающих лайков. Помещая эти данные в таблицу COMMON_FILMS
@@ -174,7 +169,7 @@ public class UserDbStorage implements UserStorage {
                 "(WITH NEIGHBOURS AS " +
                 "(SELECT LIKES.USER_ID FROM LIKES_FILM AS LIKES " +
                 "INNER JOIN REQUESTED_USER_FILMS ON LIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID " +
-                "WHERE LIKES.USER_ID <> ?) " +
+                "WHERE LIKES.USER_ID <> ?1) " +
                 "SELECT NEIGHBOURS_LIKES.USER_ID, " +
                 "COUNT(NEIGHBOURS_LIKES.FILM_ID) AS COMMON_COUNT " +
                 "FROM LIKES_FILM AS NEIGHBOURS_LIKES " +
