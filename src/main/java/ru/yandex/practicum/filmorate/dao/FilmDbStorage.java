@@ -234,14 +234,26 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getFilmByDirector(int directorId, String sortBy) {
         String sql =    "SELECT " +
-                        "    F.*, " +
-                        "    COUNT(DISTINCT LF.USER_ID) likes " +
+                        "   F.ID, " +
+                        "   F.NAME, " +
+                        "   F.DESCRIPTION, " +
+                        "   F.DURATION, " +
+                        "   F.RELEASE_DATE, " +
+                        "   COUNT(DISTINCT LF.USER_ID) likes " +
                         "FROM FILMS_DIRECTORS FD " +
                         "    INNER JOIN FILMS F on F.ID = FD.FILM_ID " +
                         "    LEFT JOIN LIKES_FILM LF on F.ID = LF.FILM_ID " +
                         "WHERE DIRECTOR_ID = ? " +
-                        "GROUP BY F.ID " +
-                        "ORDER BY " + (sortBy.equals("year")? "F.RELEASE_DATE": sortBy);
+                        "GROUP BY F.ID ";
+
+        switch (sortBy){
+            case "likes":
+                sql = sql.concat("ORDER BY likes");
+                break;
+            case "year":
+                sql = sql.concat("ORDER BY F.RELEASE_DATE");
+                break;
+        }
 
         List<Film> films = new ArrayList<>();
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql,
