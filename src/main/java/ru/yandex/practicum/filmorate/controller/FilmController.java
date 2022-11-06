@@ -16,7 +16,6 @@ import java.util.Optional;
 @Slf4j
 public class FilmController {
 
-
     private final FilmService filmService;
     private final UserService userService;
 
@@ -74,6 +73,12 @@ public class FilmController {
 
         return filmService.getMostPopularFilmsIntersectionWithFriend(userId, friendId);
     }
+    
+    	@DeleteMapping("/{filmId}")
+	public void deleteFilm(@PathVariable int filmId){
+		filmService.deleteFilm(filmId);
+	}
+
 
 }
 
