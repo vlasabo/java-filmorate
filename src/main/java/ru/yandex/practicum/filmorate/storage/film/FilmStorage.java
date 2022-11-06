@@ -33,5 +33,9 @@ public interface FilmStorage {
 
     List<Film> topNFilms(int count);
 
+
     void deleteFilm(int id);
+
+    List<Film> getAllFilmsUserLiked(int userId);
+
 }

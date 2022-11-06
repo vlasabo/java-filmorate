@@ -18,12 +18,13 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class FilmService {
-	private final FilmStorage filmStorage;
+    private final FilmStorage filmStorage;
 
-	@Autowired
+    @Autowired
     public FilmService(FilmStorage filmDbStorage) {
         this.filmStorage = filmDbStorage;
     }
+
 
 	public Film like(int filmId, int userId, UserService userService, boolean like) {
 		Film film = getFilmById(filmId);
@@ -94,4 +95,15 @@ public class FilmService {
 		filmStorage.deleteFilm(id);
 		log.debug("Delete  film {}", id);
 	}
+
+    public List<Film> getMostPopularFilmsIntersectionWithFriend(int userId, int friendId) {
+        List<Film> allFilmsUserLiked = filmStorage.getAllFilmsUserLiked(userId);
+        List<Film> allFilmsFriendLiked = filmStorage.getAllFilmsUserLiked(friendId);
+
+        return allFilmsUserLiked.stream()
+                .filter(allFilmsFriendLiked::contains)
+                .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
+                .collect(Collectors.toList());
+    }
+
 }
