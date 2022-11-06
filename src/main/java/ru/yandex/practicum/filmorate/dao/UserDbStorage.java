@@ -15,9 +15,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,10 +43,6 @@ public class UserDbStorage implements UserStorage {
 
     @Autowired
     private final FilmStorage filmStorage;
-
-    /*public UserDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }*/
 
     @Override
     public User addUser(User user) {
@@ -143,8 +137,23 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<Film> getRecommendations(int userId) {
+        /*return
+                jdbcTemplate.query(
+                        queryRecommendations(), preparedStatement -> {
+                            preparedStatement.setInt(1, userId);
+                            preparedStatement.setInt(2, userId);
+                        },
+                        resultSet -> {
+                            List<Film> rec = new ArrayList<>();
+                            while (resultSet.next()) {
+                                Optional<Film> film = filmStorage.getFilmById(resultSet.getInt("film_id"));
+                                film.ifPresent(rec::add);
+                            }
+                            return rec;
+                        }
+                );*/
         List<Film> recommendedFilms = new ArrayList<>();
-        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(queryRecommendations(), userId, userId);
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(queryRecommendations().replace("?", String.valueOf(userId)));
         while (filmRows.next()) {
             Optional<Film> film = filmStorage.getFilmById(filmRows.getInt("film_id"));
             film.ifPresent(recommendedFilms::add);
