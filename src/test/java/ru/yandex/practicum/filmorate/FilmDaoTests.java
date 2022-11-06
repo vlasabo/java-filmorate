@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
 import ru.yandex.practicum.filmorate.model.film_attributes.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -66,6 +67,7 @@ class FilmDaoTests {
 
         film3 = setLikeToFilm(film3, 3, 3);
 
+
         var resultListFilms = new ArrayList<Film>();
         resultListFilms.add(film3);
         resultListFilms.add(film2);
@@ -75,6 +77,9 @@ class FilmDaoTests {
     private Film addFilm(int i) {
         Film film = new Film("testTitle" + i, "testDescr" + i, LocalDate.ofEpochDay(1), i * 100);
         film.setMpa(new Mpa("testMpa" + i, i));
+        var genres = new ArrayList<Genre>();
+        genres.add(new Genre("testGenre", 1));
+        film.setGenres(genres);
         filmStorage.addFilm(film);
         return film;
     }
