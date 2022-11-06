@@ -14,13 +14,15 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
 
-    @Autowired
+    /*@Autowired
     public UserService(UserStorage userDbStorage) {
         this.userStorage = userDbStorage;
-    }
+    }*/
 
     public User getUserById(int userId) {
         Optional<User> userOptional = userStorage.findUserById(userId);
@@ -92,5 +94,43 @@ public class UserService {
     public List<User> getAllUsers() {
         log.debug("get all users");
         return userStorage.getAllUsers();
+    }
+
+    public List<Film> getRecommendations(Integer userId) {
+        List<Film> recommendedFilms = new ArrayList<>;
+        getUserById(userId);
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(queryRecommendations(), userId, userId);
+        if (filmRows.next()) {
+            recommendedFilms.add(filmStorage.getFilmById(filmRows.getInt("film_id")));
+        } else {
+            log.info("Рекомендованные фильмы для пользователя {} не найдены.", userId);
+        }
+        return recommendedFilms;
+    }
+
+    private String queryRecommendations() {
+        Return "WITH REQUESTED_USER_FILMS AS " +
+                "  (SELECT FL.FILM_ID FROM LIKES_FILM FL WHERE FL.USER_ID = 3)," +
+                "COMMON_FILMS AS " +
+                "  (WITH NEIGHBOURS AS " +
+                "    (SELECT " +
+                "    LIKES.USER_ID" +
+                "    FROM LIKES_FILM AS LIKES INNER JOIN REQUESTED_USER_FILMS ON LIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID" +
+                "    WHERE LIKES.USER_ID <> 3)" +
+                "  SELECT NEIGHBOURS_LIKES.USER_ID, " +
+                "  COUNT(NEIGHBOURS_LIKES.FILM_ID) AS COMMON_COUNT " +
+                "  FROM LIKES_FILM AS NEIGHBOURS_LIKES" +
+                "  INNER JOIN NEIGHBOURS ON NEIGHBOURS.USER_ID = NEIGHBOURS_LIKES.USER_ID" +
+                "  INNER JOIN REQUESTED_USER_FILMS ON NEIGHBOURS_LIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID" +
+                "  GROUP BY NEIGHBOURS_LIKES.USER_ID" +
+                "  LIMIT 5)" +
+                "SELECT SUM(COMMON_FILMS.COMMON_COUNT) AS FILM_WEIGHT, " +
+                "FLIKES.FILM_ID" +
+                "FROM LIKES_FILM AS FLIKES " +
+                "INNER JOIN COMMON_FILMS ON FLIKES.USER_ID = COMMON_FILMS.USER_ID" +
+                "LEFT JOIN REQUESTED_USER_FILMS ON FLIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID" +
+                "WHERE REQUESTED_USER_FILMS.FILM_ID IS NULL " +
+                "GROUP BY FLIKES.FILM_ID" +
+                "ORDER BY SUM(COMMON_FILMS.COMMON_COUNT) DESC";
     }
 }

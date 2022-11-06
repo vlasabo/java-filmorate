@@ -63,4 +63,9 @@ public class UserController {
     public List<User> getIntersectionFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
         return userService.getIntersectionFriends(id, otherId);
     }
+
+    @GetMapping("/{id}/recommendations")
+    public List<Film> getRecommendations(@PathVariable Integer id) {
+
+    }
 }
