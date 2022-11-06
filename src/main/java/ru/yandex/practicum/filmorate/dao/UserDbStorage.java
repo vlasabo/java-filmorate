@@ -144,17 +144,21 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<Film> getRecommendations(int userId) {
-        List<Integer> recommendedFilms = jdbcTemplate.query(
-                queryRecommendations().replace("?", String.valueOf(userId)),
-                resultSet -> {
-                    List<Integer> rec = new ArrayList<>();
-                    if (resultSet.next()) {
-                        rec.add(resultSet.getInt("film_id"));
+        if (findUserById(userId).isPresent()) {
+            List<Integer> recommendedFilms = jdbcTemplate.query(
+                    queryRecommendations().replace("?", String.valueOf(userId)),
+                    resultSet -> {
+                        List<Integer> rec = new ArrayList<>();
+                        if (resultSet.next()) {
+                            rec.add(resultSet.getInt("film_id"));
+                        }
+                        return rec;
                     }
-                    return rec;
-                }
-        );
-        return filmStorage.getListFilmsByListId(recommendedFilms);
+            );
+            return filmStorage.getListFilmsByListId(recommendedFilms);
+        } else {
+            throw new NotFoundException("no user with this id");
+        }
     }
 
     private String queryRecommendations() {

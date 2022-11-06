@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
@@ -94,5 +95,33 @@ class FilmDaoTests {
         filmStorage.addLike(filmId, userId);
         film.getLikes().add(userId);
         return film;
+    }
+
+    @Test
+    public void recommendationsTest() {
+        addUser(1);
+        addUser(2);
+        Film film1 = addFilm(1);
+        Film film2 = addFilm(2);
+        Film film3 = addFilm(3);
+        Film film4 = addFilm(4);
+        // лайков ещё нет, количество рекомендаций будет = 0
+        Assertions.assertEquals(0, userStorage.getRecommendations(1).size());
+        setLikeToFilm(film1, 1, 1);
+        setLikeToFilm(film1, 1, 2);
+        // все лайки общие, количество рекомендаций будет = 0
+        Assertions.assertEquals(0, userStorage.getRecommendations(1).size());
+        setLikeToFilm(film2, 2, 1);
+        setLikeToFilm(film2, 2, 2);
+        setLikeToFilm(film3, 3, 1);
+        // есть совпадающие лайки на 1 и 2 фильме, в рекомендациях будет только фильм 3
+        Assertions.assertEquals(1, userStorage.getRecommendations(2).size());
+        Assertions.assertEquals(3, userStorage.getRecommendations(2).get(0).getId());
+        setLikeToFilm(film4, 4, 2);
+        // есть совпадающие лайки на 1 и 2 фильме, в рекомендациях будет только фильм 4
+        Assertions.assertEquals(1, userStorage.getRecommendations(1).size());
+        Assertions.assertEquals(4, userStorage.getRecommendations(1).get(0).getId());
+        // должно вернуть 404 для несуществующего пользователя
+        Assertions.assertThrows(NotFoundException.class, () -> userStorage.getRecommendations(42));
     }
 }
