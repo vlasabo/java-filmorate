@@ -16,10 +16,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
+    private final EventService eventService;
 
     @Autowired
-    public UserService(UserStorage userDbStorage) {
+    public UserService(UserStorage userDbStorage, EventService eventService) {
         this.userStorage = userDbStorage;
+        this.eventService = eventService;
     }
 
     public User getUserById(int userId) {
@@ -40,9 +42,11 @@ public class UserService {
         if (add) { //this "if" only for log
             checkMutuallyAndAddOrRemoveFriend(user, friendId, true);
             log.debug("User {} add friend {}", userId, friendId);
+            eventService.addAddedFriendEvent(userId, friendId);
         } else {
             checkMutuallyAndAddOrRemoveFriend(user, friendId, false);
             log.debug("User {} remove friend {}", userId, friendId);
+            eventService.addRemovedFriendEvent(userId, friendId);
         }
         return user;
     }

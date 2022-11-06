@@ -50,7 +50,7 @@ public class EventDbStorage implements EventStorage {
     private Event mapRowToEvent(ResultSet rs, int rowNum) throws SQLException {
         return new Event()
                 .setId(rs.getInt("event_id"))
-                .setTimestamp(rs.getTimestamp("event_time").toLocalDateTime())
+                .setTimestamp(rs.getLong("event_time"))
                 .setEventType(EventType.valueOf(rs.getString("event_type")))
                 .setOperation(OperationType.valueOf(rs.getString("operation")))
                 .setUserId(rs.getInt("user_id"))

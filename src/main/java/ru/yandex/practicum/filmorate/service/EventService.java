@@ -7,7 +7,7 @@ import ru.yandex.practicum.filmorate.model.enums.EventType;
 import ru.yandex.practicum.filmorate.model.enums.OperationType;
 import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 import static ru.yandex.practicum.filmorate.model.enums.EventType.*;
@@ -54,7 +54,7 @@ public class EventService {
     private Event makeEvent(int userId, int entityId, EventType eT, OperationType oT) {
         return new Event()
                 .setId(0)
-                .setTimestamp(LocalDateTime.now())
+                .setTimestamp(Instant.now().toEpochMilli())
                 .setEventType(eT)
                 .setOperation(oT)
                 .setUserId(userId)

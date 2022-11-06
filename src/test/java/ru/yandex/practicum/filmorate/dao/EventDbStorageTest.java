@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.event;
+package ru.yandex.practicum.filmorate.dao;
 
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.enums.EventType;
 import ru.yandex.practicum.filmorate.model.enums.OperationType;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -135,7 +136,7 @@ class EventDbStorageTest {
     private Event makeEvent(int userId, int entityId, EventType eT, OperationType oT) {
         return new Event()
                 .setId(0)
-                .setTimestamp(LocalDateTime.now())
+                .setTimestamp(Instant.now().toEpochMilli())
                 .setEventType(eT)
                 .setOperation(oT)
                 .setUserId(userId)
