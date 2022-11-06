@@ -1,12 +1,14 @@
-package ru.yandex.practicum.filmorate.storage.event;
+package ru.yandex.practicum.filmorate.dao;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.enums.EventType;
 import ru.yandex.practicum.filmorate.model.enums.OperationType;
+import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class EventDbStorage implements EventStorage {
@@ -32,6 +35,9 @@ public class EventDbStorage implements EventStorage {
         values.put("user_id", event.getUserId());
         values.put("entity_id", event.getEntityId());
         event.setId(simpleJdbcInsert.executeAndReturnKey(values).intValue());
+
+        log.debug("New event added: {}", event);
+
         return event;
     }
 
