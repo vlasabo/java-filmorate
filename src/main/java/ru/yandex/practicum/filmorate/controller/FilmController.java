@@ -17,55 +17,63 @@ import java.util.Optional;
 public class FilmController {
 
 
-	private final FilmService filmService;
-	private final UserService userService;
+    private final FilmService filmService;
+    private final UserService userService;
 
-	@Autowired
-	public FilmController(FilmService filmService, UserService userService) {
-		this.filmService = filmService;
-		this.userService = userService;
-	}
+    @Autowired
+    public FilmController(FilmService filmService, UserService userService) {
+        this.filmService = filmService;
+        this.userService = userService;
+    }
 
-	@PutMapping
-	public Film updateFilm(@Valid @RequestBody Film film) {
-		return filmService.updateFilm(film);
-	}
+    @PutMapping
+    public Film updateFilm(@Valid @RequestBody Film film) {
+        return filmService.updateFilm(film);
+    }
 
-	@PostMapping
-	public Film addFilm(@Valid @RequestBody Film film) {
-		return filmService.addFilm(film);
-	}
+    @PostMapping
+    public Film addFilm(@Valid @RequestBody Film film) {
+        return filmService.addFilm(film);
+    }
 
-	@GetMapping
-	public List<Film> getAllFilms() {
-		log.debug("get all films");
-		return filmService.getAllFilms();
-	}
+    @GetMapping
+    public List<Film> getAllFilms() {
+        log.debug("get all films");
+        return filmService.getAllFilms();
+    }
 
-	@GetMapping("{filmId}")
-	public Film getFilmById(@PathVariable Integer filmId) {
-		return filmService.getFilmById(filmId);
-	}
-
-
-	@PutMapping("{id}/like/{userId}")
-	public Film likeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
-		return filmService.like(id, userId, userService, true);
-	}
-
-	@DeleteMapping("{id}/like/{userId}")
-	public Film unlikeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
-		return filmService.like(id, userId, userService, false);
-	}
-
-	@GetMapping("popular")
-	public List<Film> mostPopularFilms(@RequestParam Optional<String> count) {
-		//I know about defaultValue, Optional use for logging
-		log.debug("get first {} most popular films", count.orElse("(quantity not specified, so 10)"));
-		return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
-	}
+    @GetMapping("{filmId}")
+    public Film getFilmById(@PathVariable Integer filmId) {
+        return filmService.getFilmById(filmId);
+    }
 
 
+    @PutMapping("{id}/like/{userId}")
+    public Film likeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
+        return filmService.like(id, userId, userService, true);
+    }
+
+    @DeleteMapping("{id}/like/{userId}")
+    public Film unlikeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
+        return filmService.like(id, userId, userService, false);
+    }
+
+    @GetMapping("popular")
+    public List<Film> mostPopularFilms(@RequestParam Optional<String> count) {
+        //I know about defaultValue, Optional use for logging
+        log.debug("get first {} most popular films", count.orElse("(quantity not specified, so 10)"));
+        return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
+    }
+
+    @GetMapping("/common")
+    public List<Film> mostPopularFilmsIntersectionWithFriend(@RequestParam Integer userId, @RequestParam Integer friendId) {
+        log.debug("get movies that friends watched, sorted by popularity by userId {} and userId {}", userId, friendId);
+        if (!userService.getUserById(userId).getFriends().containsKey(friendId)) {
+            log.debug("users with userId {} and userId {} are not friends", userId, friendId);
+        }
+
+        return filmService.getMostPopularFilmsIntersectionWithFriend(userId, friendId);
+    }
 
 }
 
