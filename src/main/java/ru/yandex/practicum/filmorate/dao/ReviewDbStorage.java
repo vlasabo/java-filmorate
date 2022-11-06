@@ -36,8 +36,8 @@ public class ReviewDbStorage implements ReviewStorage {
                             "    EXISTS(SELECT 1 FROM users WHERE id = ?) AND " +
                             "    EXISTS(SELECT 1 FROM FILMS where ID = ?)";
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sqlCheck, review.getUserId(), review.getFilmId());
-        rowSet.last();
-        if (rowSet.getRow() == 0){
+
+        if (!rowSet.next()){
             log.debug("Incorrect userId or filmId.");
             throw new NotFoundException("Incorrect data.");
         }
@@ -70,7 +70,7 @@ public class ReviewDbStorage implements ReviewStorage {
                      "SET CONTENT = ?, ISPOSITIVE = ? " +
                      "WHERE ID = ?";
 
-        int updateCount;
+        int updateCount = 0;
 
         try {
             updateCount = jdbcTemplate.update(sql,
@@ -111,8 +111,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public void remove(int id) {
-        String sql =    "DELETE FROM LIKES_REVIEW WHERE review_id = ?1; " +
-                        "DELETE FROM REVIEWS WHERE ID = ?1";
+        String sql = "DELETE FROM REVIEWS WHERE ID = ?1";
 
         jdbcTemplate.update(sql, id);
 
@@ -188,10 +187,9 @@ public class ReviewDbStorage implements ReviewStorage {
                         "WHERE REVIEW_ID = ?";
 
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, id);
-        rowSet.last();
 
         int useful = 0;
-        if (rowSet.getRow() != 0){
+        if (rowSet.next()){
             useful = rowSet.getInt("grade");
         }
 

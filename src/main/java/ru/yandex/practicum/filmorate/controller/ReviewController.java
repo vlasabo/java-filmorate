@@ -9,7 +9,9 @@ import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
+
 @RestController
+@RequestMapping(value = "/reviews")
 public class ReviewController {
 
     private final ReviewService reviewService;
@@ -19,51 +21,51 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
-    @GetMapping("/reviews")
+    @GetMapping()
     public List<Review> getReviews(@RequestParam Optional<Integer> filmId,
                                    @RequestParam(defaultValue = "10") int count){
         return reviewService.getReviews(filmId, count);
     }
 
-    @PostMapping("/reviews")
+    @PostMapping()
     public Review postReview(@Valid @RequestBody Review review){
         return reviewService.addReview(review);
     }
 
-    @PutMapping("/reviews")
+    @PutMapping()
     public Review putReview(@Valid @RequestBody Review review){
         return reviewService.updateReview(review);
     }
 
-    @GetMapping("/reviews/{id}")
+    @GetMapping("/{id}")
     public Review getReview(@PathVariable int id){
         return reviewService.getReview(id);
     }
 
-    @DeleteMapping("reviews/{id}")
+    @DeleteMapping("/{id}")
     public void removeReview(@PathVariable int id){
         reviewService.removeReview(id);
     }
 
-    @PutMapping("/reviews/{id}/like/{userId}")
+    @PutMapping("/{id}/like/{userId}")
     public void putLike(@PathVariable int id,
                         @PathVariable int userId){
         reviewService.addLike(id, userId);
     }
 
-    @PutMapping("/reviews/{id}/dislike/{userId}")
+    @PutMapping("/{id}/dislike/{userId}")
     public void putDislike(@PathVariable int id,
                            @PathVariable int userId){
         reviewService.addDislike(id, userId);
     }
 
-    @DeleteMapping("/reviews/{id}/like/{userId}")
+    @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable int id,
                            @PathVariable int userId){
         reviewService.deleteLike(id, userId);
     }
 
-    @DeleteMapping("/reviews/{id}/dislike/{userId}")
+    @DeleteMapping("/{id}/dislike/{userId}")
     public void deleteDislike(@PathVariable int id,
                               @PathVariable int userId){
         reviewService.deleteDislike(id, userId);

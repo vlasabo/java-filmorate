@@ -60,12 +60,12 @@ CREATE TABLE IF NOT EXISTS reviews(
     content VARCHAR NOT NULL,
     isPositive BOOLEAN NOT NULL,
     useful INTEGER NOT NULL,
-    user_id INTEGER REFERENCES users(id),
-    film_id INTEGER REFERENCES films(id)
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE ,
+    film_id INTEGER REFERENCES films(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS likes_review(
-    review_id INTEGER REFERENCES reviews(id),
-    user_id INTEGER REFERENCES users(id),
+    review_id INTEGER REFERENCES reviews(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     grade INTEGER CHECK (grade = -1 OR grade = 1)
 );
