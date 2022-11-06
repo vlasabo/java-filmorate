@@ -30,8 +30,8 @@ public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    private UserStorage userStorage;
+    /*@Autowired
+    private UserStorage userStorage;*/
 
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
