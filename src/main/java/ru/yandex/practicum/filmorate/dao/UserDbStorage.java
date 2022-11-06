@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -15,9 +17,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.util.*;
 
 @Component
@@ -143,18 +144,29 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<Film> getRecommendations(int userId) {
-        List<Integer> recommendedFilms = new ArrayList<>();
-        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(queryRecommendations().replace("?", String.valueOf(userId)));
-        while (filmRows.next()) {
-            recommendedFilms.add(filmRows.getInt("film_id"));
-        }
+        List<Integer> recommendedFilms = jdbcTemplate.query(
+                queryRecommendations().replace("?", String.valueOf(userId)),
+                resultSet -> {
+                    List<Integer> rec = new ArrayList<>();
+                    if (resultSet.next()) {
+                        rec.add(resultSet.getInt("film_id"));
+                    }
+                    return rec;
+                }
+        );
         return filmStorage.getListFilmsByListId(recommendedFilms);
     }
 
     private String queryRecommendations() {
+                // 1. Сначала получим фильмы, которые лайкнул рассматриваемый юзер, и поместим их в таблицу REQUESTED_USER_FILMS
         return "WITH REQUESTED_USER_FILMS AS " +
                 "(SELECT FL.FILM_ID FROM LIKES_FILM FL WHERE FL.USER_ID = ?), " +
+                // 3. Используя таблицы REQUESTED_USER_FILMS и NEIGHBOURS считаем количество совпадающих лайков
+                // у пользователя и его ближайших соседей, оставляя 5 ближайших соседей с наибольшим количеством
+                // совпадающих лайков. Помещая эти данные в таблицу COMMON_FILMS
                 "COMMON_FILMS AS " +
+                // 2. Определим "ближайших соседей", т.е. пользователей, лайки которых совпадают с лайками нашего юзера
+                // и помещаем их в таблицу NEIGHBOURS
                 "(WITH NEIGHBOURS AS " +
                 "(SELECT LIKES.USER_ID FROM LIKES_FILM AS LIKES " +
                 "INNER JOIN REQUESTED_USER_FILMS ON LIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID " +
@@ -166,6 +178,9 @@ public class UserDbStorage implements UserStorage {
                 "INNER JOIN REQUESTED_USER_FILMS ON NEIGHBOURS_LIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID " +
                 "GROUP BY NEIGHBOURS_LIKES.USER_ID " +
                 "LIMIT 5) " +
+                // колонка FILM_WEIGHT представляет собой вес фильма.
+                // Считаем как сумма совпадающих лайков ближайшего соседа и нашего пользователя. То есть, чем в больше
+                // количестве фильмов мнение юзера и соседа совпало, тем больший вес будет иметь оценка данного соседа по данному фильму для пользователя.
                 "SELECT SUM(COMMON_FILMS.COMMON_COUNT) AS FILM_WEIGHT, " +
                 "F_LIKES.FILM_ID FROM LIKES_FILM AS F_LIKES " +
                 "INNER JOIN COMMON_FILMS ON F_LIKES.USER_ID = COMMON_FILMS.USER_ID " +
