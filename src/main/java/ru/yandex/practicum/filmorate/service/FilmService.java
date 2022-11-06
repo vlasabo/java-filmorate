@@ -25,69 +25,76 @@ public class FilmService {
         this.filmStorage = filmDbStorage;
     }
 
-    public Film like(int filmId, int userId, UserService userService, boolean like) {
-        Film film = getFilmById(filmId);
-        userService.getUserById(userId); //check user exist
-        if (like) {
-            film.addLike(userId);
-            filmStorage.addLike(filmId, userId);
-            log.debug("add like to film with id={} from user with id={}", filmId, userId);
-        } else {
-            film.removeLike(userId);
-            filmStorage.removeLike(filmId, userId);
-            log.debug("remove like to film with id={} from user with id={}", filmId, userId);
-        }
-        return film;
-    }
 
-    public List<Film> topNFilms(int quantity) {
-        if (quantity <= 0) {
-            quantity = 10;
-        }
+	public Film like(int filmId, int userId, UserService userService, boolean like) {
+		Film film = getFilmById(filmId);
+		userService.getUserById(userId); //check user exist
+		if (like) {
+			film.addLike(userId);
+			filmStorage.addLike(filmId, userId);
+			log.debug("add like to film with id={} from user with id={}", filmId, userId);
+		} else {
+			film.removeLike(userId);
+			filmStorage.removeLike(filmId, userId);
+			log.debug("remove like to film with id={} from user with id={}", filmId, userId);
+		}
+		return film;
+	}
 
-        List<Film> allFilms = getAllFilms();
-        return allFilms.stream().sorted(Comparator.comparing(Film::howManyLikes).reversed())
-                .limit(quantity).collect(Collectors.toList());
-    }
+	public List<Film> topNFilms(int quantity) {
+		if (quantity <= 0) {
+			quantity = 10;
+		}
 
-    public Film getFilmById(int filmId) {
-        Optional<Film> filmOptional = filmStorage.getAllFilms().stream().filter(f -> f.getId() == filmId).findFirst();
-        if (filmOptional.isPresent()) {
-            log.debug("get film by id {}", filmId);
-            return filmOptional.get();
-        } else {
-            log.debug("Film by id {} not found", filmId);
-            throw new NotFoundException(String.format("Film by id %d not found", filmId));
-        }
-    }
+		List<Film> allFilms = getAllFilms();
+		return allFilms.stream().sorted(Comparator.comparing(Film::howManyLikes).reversed())
+				.limit(quantity).collect(Collectors.toList());
+	}
 
-    public List<Film> getAllFilms() {
-        return filmStorage.getAllFilms();
-    }
+	public Film getFilmById(int filmId) {
+		Optional<Film> filmOptional = filmStorage.getAllFilms().stream().filter(f -> f.getId() == filmId).findFirst();
+		if (filmOptional.isPresent()) {
+			log.debug("get film by id {}", filmId);
+			return filmOptional.get();
+		} else {
+			log.debug("Film by id {} not found", filmId);
+			throw new NotFoundException(String.format("Film by id %d not found", filmId));
+		}
+	}
 
-    public Film addFilm(Film film) {
-        return filmStorage.addFilm(film);
-    }
+	public List<Film> getAllFilms() {
+		return filmStorage.getAllFilms();
+	}
 
-    public Film updateFilm(Film film) {
-        return filmStorage.updateFilm(film);
-    }
+	public Film addFilm(Film film) {
+		return filmStorage.addFilm(film);
+	}
 
-    public List<Genre> getAllGenres() {
-        return filmStorage.getAllGenres();
-    }
+	public Film updateFilm(Film film) {
+		return filmStorage.updateFilm(film);
+	}
 
-    public Genre getGenreById(Integer genreId) {
-        return filmStorage.getGenreById(genreId);
-    }
+	public List<Genre> getAllGenres() {
+		return filmStorage.getAllGenres();
+	}
 
-    public List<Mpa> getAllMpa() {
-        return filmStorage.getAllMpa();
-    }
+	public Genre getGenreById(Integer genreId) {
+		return filmStorage.getGenreById(genreId);
+	}
 
-    public Mpa getMpaById(Integer mpaId) {
-        return filmStorage.getMpaById(mpaId);
-    }
+	public List<Mpa> getAllMpa() {
+		return filmStorage.getAllMpa();
+	}
+
+	public Mpa getMpaById(Integer mpaId) {
+		return filmStorage.getMpaById(mpaId);
+	}
+
+	public void deleteFilm(int id){
+		getFilmById(id);
+		filmStorage.deleteFilm(id);
+		log.debug("Delete  film {}", id);
+	}
 
     public List<Film> getMostPopularFilmsIntersectionWithFriend(int userId, int friendId) {
         List<Film> allFilmsUserLiked = filmStorage.getAllFilmsUserLiked(userId);
@@ -98,4 +105,5 @@ public class FilmService {
                 .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
                 .collect(Collectors.toList());
     }
+
 }

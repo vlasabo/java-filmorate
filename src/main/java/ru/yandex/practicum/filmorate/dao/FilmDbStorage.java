@@ -65,7 +65,11 @@ public class FilmDbStorage implements FilmStorage {
     private static final String SQL_REMOVE_FILM_LIKE =
             "DELETE FROM likes_film WHERE (film_id= ? AND user_id= ?) ";
 
+    private static final String SQL_REMOVE_FILM_BY_ID =
+            "DELETE FROM films WHERE id = ?";
+
     private static final String SQL_FIND_ALL_LIKED_FILMS = "SELECT film_id FROM likes_film WHERE user_id = ?";
+
 
     @Override
     public Film addFilm(Film film) {
@@ -203,14 +207,80 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public void deleteFilm(int id) {
+        jdbcTemplate.update(SQL_REMOVE_FILM_BY_ID, id);
+    }
+    @Override
     public List<Film> getAllFilmsUserLiked(int userId) {
         List<Film> allFilms = new ArrayList<>();
-        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(SQL_FIND_ALL_LIKED_FILMS, userId);
-        while (filmRows.next()) {
-            Optional<Film> optFilm = getFilmById(filmRows.getInt("film_id"));
-            optFilm.ifPresent(allFilms::add);
+        List<Integer> allFilmsId = new ArrayList<>();
+        SqlRowSet filmIdRows = jdbcTemplate.queryForRowSet(SQL_FIND_ALL_LIKED_FILMS, userId);
+        while (filmIdRows.next()) {
+            allFilmsId.add(filmIdRows.getInt("film_id"));
+        }
+        return getListFilmsByListId(allFilmsId);
+    }
+
+    private List<Film> getListFilmsByListId(List<Integer> ids) {
+        List<Film> allFilms = new ArrayList<>();
+        String stringListFilmsId = "(" + ids.toString().substring(1, ids.toString().length() - 1).replace(" ", "") + ")";
+        SqlRowSet likeRows = jdbcTemplate.queryForRowSet("SELECT * FROM likes_film WHERE film_id IN " + stringListFilmsId);
+        SqlRowSet genreRows = jdbcTemplate.queryForRowSet("SELECT * FROM films_genres WHERE film_id IN " + stringListFilmsId);
+        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet("SELECT * FROM films_mpa WHERE film_id IN " + stringListFilmsId);
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet("SELECT * FROM films WHERE id IN " + stringListFilmsId);
+        SqlRowSet genres = jdbcTemplate.queryForRowSet("SELECT * FROM genres");
+        SqlRowSet mpa = jdbcTemplate.queryForRowSet("SELECT * FROM mpa");
+
+        //создадим все жанры
+        List<Genre> allGenres = new ArrayList<>();
+        while (genres.next()) {
+            allGenres.add(new Genre(genres.getString("genre_name"), genres.getInt("genre_id")));
+        }
+
+        //создадим все mpa
+        var allMpa = new HashMap<Integer, Mpa>();
+        while (mpa.next()) {
+            allMpa.put(mpa.getInt("id"), new Mpa(mpa.getString("mpa_name"), mpa.getInt("id")));
+        }
+
+        for (int filmId : ids) {
+            filmRows.next();
+            Film film = new Film(filmRows.getString("name"), filmRows.getString("description")
+                    , filmRows.getDate("release_date").toLocalDate(), filmRows.getInt("duration"));
+            film.setId(filmId);
+            //установим лайки
+            HashSet<Integer> likesSet = new HashSet<>();
+            while (likeRows.next()) {
+                if (("" + filmId).equals(likeRows.getString("film_id"))) {
+                    likesSet.add(likeRows.getInt("user_id"));
+                }
+            }
+            likeRows.beforeFirst();
+            film.setLikes(likesSet);
+
+            //установим жанры
+            List<Integer> genresListId = new ArrayList<>();
+            while (genreRows.next()) {
+                if (("" + filmId).equals(genreRows.getString("film_id"))) {
+                    genresListId.add(genreRows.getInt("genre_id"));
+                }
+            }
+            genreRows.beforeFirst();
+
+            List<Genre> genresList = allGenres.stream().filter(x -> genresListId.contains(x.getId())).collect(Collectors.toList());
+            film.setGenres((ArrayList<Genre>) genresList);
+
+            //установим MPA
+            while (mpaRows.next()) {
+                if (("" + filmId).equals(mpaRows.getString("film_id"))) {
+                    film.setMpa(allMpa.get(mpaRows.getInt("mpa_id")));
+                }
+            }
+            mpaRows.beforeFirst();
+            allFilms.add(film);
         }
         return allFilms;
+
     }
 
     private Set<Integer> getSetLikesForFilmFromDb(int filmId) {
