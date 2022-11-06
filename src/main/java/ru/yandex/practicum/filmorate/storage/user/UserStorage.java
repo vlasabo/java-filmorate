@@ -22,4 +22,6 @@ public interface UserStorage {
 	HashMap<Integer, Boolean> findALlFriends(User user);
 
 	void removeFriends(User user, User userById);
+
+	void deleteUser(int id);
 }

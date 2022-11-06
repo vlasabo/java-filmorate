@@ -32,4 +32,10 @@ public interface FilmStorage {
     void removeLike(int filmId, int userId);
 
     List<Film> topNFilms(int count);
+
+
+    void deleteFilm(int id);
+
+    List<Film> getAllFilmsUserLiked(int userId);
+
 }
