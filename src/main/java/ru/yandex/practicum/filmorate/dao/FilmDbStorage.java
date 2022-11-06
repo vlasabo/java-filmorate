@@ -231,6 +231,33 @@ public class FilmDbStorage implements FilmStorage {
         return getListFilmsByListId(allFilmsId);
     }
 
+    @Override
+    public List<Film> getFilmByDirector(int directorId, String sortBy) {
+        String sql =    "SELECT " +
+                        "    F.*, " +
+                        "    COUNT(DISTINCT LF.USER_ID) likes " +
+                        "FROM FILMS_DIRECTORS FD " +
+                        "    INNER JOIN FILMS F on F.ID = FD.FILM_ID " +
+                        "    LEFT JOIN LIKES_FILM LF on F.ID = LF.FILM_ID " +
+                        "WHERE DIRECTOR_ID = ? " +
+                        "GROUP BY F.ID " +
+                        "ORDER BY " + (sortBy.equals("year")? "F.RELEASE_DATE": sortBy);
+
+        List<Film> films = new ArrayList<>();
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql,
+                directorId);
+        while (rowSet.next()) {
+            films.add(getFilmFromRow(rowSet));
+        }
+        if (films.size() == 0){
+            log.debug("Director id={} not found", directorId);
+            throw new NotFoundException("Director id=" + directorId + " not found");
+        }
+        fillDirectorsFromDb(films);
+
+        return films;
+    }
+
     private List<Film> getListFilmsByListId(List<Integer> ids) {
         List<Film> allFilms = new ArrayList<>();
         String stringListFilmsId = "(" + ids.toString().substring(1, ids.toString().length() - 1).replace(" ", "") + ")";

@@ -74,11 +74,15 @@ public class FilmController {
         return filmService.getMostPopularFilmsIntersectionWithFriend(userId, friendId);
     }
     
-    	@DeleteMapping("/{filmId}")
+    @DeleteMapping("/{filmId}")
 	public void deleteFilm(@PathVariable int filmId){
 		filmService.deleteFilm(filmId);
 	}
 
-
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(@PathVariable int directorId,
+                                   @RequestParam String sortBy){
+        return filmService.getFilmByDirector(directorId, sortBy);
+    }
 }
 
