@@ -10,6 +10,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
 import ru.yandex.practicum.filmorate.model.film_attributes.Mpa;
@@ -92,6 +93,7 @@ public class FilmDbStorage implements FilmStorage {
         film.setGenres(new ArrayList<>(newGenresList)); //in Java object
         updateGenresForFilmInDb(film.getId(), newGenresList.stream().distinct().map(genre -> //in DB
                 genre.getId()).collect(Collectors.toList()));
+        updateDirectorsForFilmInDb(film);
         log.debug("correct adding film {}", film);
 
         return film;
@@ -131,6 +133,7 @@ public class FilmDbStorage implements FilmStorage {
             film.setGenres(new ArrayList<>(newGenresList)); //in Java object
             updateGenresForFilmInDb(film.getId(), newGenresList.stream().distinct().map(genre ->
                     genre.getId()).collect(Collectors.toList()));
+            updateDirectorsForFilmInDb(film);
             log.debug("correct update film {}", film);
         } else {
             log.debug("incorrect update film {}", film);
@@ -344,6 +347,23 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(SQL_ADD_FILM_MPA, filmId, filmMpaId);
     }
 
+    private void updateDirectorsForFilmInDb(Film film){
+        jdbcTemplate.update("DELETE FROM FILMS_DIRECTORS WHERE FILM_ID = ?", film.getId());
 
+        List<Director> directors = new ArrayList<>(film.getDirectors());
+        jdbcTemplate.batchUpdate("INSERT INTO FILMS_DIRECTORS (FILM_ID, DIRECTOR_ID) VALUES ( ?1, ?2 )",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ps.setInt(1, film.getId());
+                        ps.setInt(2, directors.get(i).getId());
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return directors.size();
+                    }
+                });
+    }
 }
 
