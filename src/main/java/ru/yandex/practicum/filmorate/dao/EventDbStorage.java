@@ -12,6 +12,8 @@ import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +31,7 @@ public class EventDbStorage implements EventStorage {
                 .withTableName("events")
                 .usingGeneratedKeyColumns("event_id");
         Map<String, Object> values = new HashMap<>();
-        values.put("event_time", event.getTimestamp());
+        values.put("event_time", Timestamp.from(Instant.ofEpochMilli(event.getTimestamp())));
         values.put("event_type", event.getEventType().name());
         values.put("operation", event.getOperation().name());
         values.put("user_id", event.getUserId());
@@ -50,7 +52,7 @@ public class EventDbStorage implements EventStorage {
     private Event mapRowToEvent(ResultSet rs, int rowNum) throws SQLException {
         return new Event()
                 .setId(rs.getInt("event_id"))
-                .setTimestamp(rs.getLong("event_time"))
+                .setTimestamp(rs.getTimestamp("event_time").getTime())
                 .setEventType(EventType.valueOf(rs.getString("event_type")))
                 .setOperation(OperationType.valueOf(rs.getString("operation")))
                 .setUserId(rs.getInt("user_id"))
