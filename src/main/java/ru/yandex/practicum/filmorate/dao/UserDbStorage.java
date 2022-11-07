@@ -171,11 +171,12 @@ public class UserDbStorage implements UserStorage {
                 "INNER JOIN REQUESTED_USER_FILMS ON LIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID " +
                 "WHERE LIKES.USER_ID <> ?1) " +
                 "SELECT NEIGHBOURS_LIKES.USER_ID, " +
-                "COUNT(NEIGHBOURS_LIKES.FILM_ID) AS COMMON_COUNT " +
+                "COUNT(DISTINCT NEIGHBOURS_LIKES.FILM_ID) AS COMMON_COUNT " +
                 "FROM LIKES_FILM AS NEIGHBOURS_LIKES " +
                 "INNER JOIN NEIGHBOURS ON NEIGHBOURS.USER_ID = NEIGHBOURS_LIKES.USER_ID " +
                 "INNER JOIN REQUESTED_USER_FILMS ON NEIGHBOURS_LIKES.FILM_ID = REQUESTED_USER_FILMS.FILM_ID " +
                 "GROUP BY NEIGHBOURS_LIKES.USER_ID " +
+                "ORDER BY COUNT(DISTINCT NEIGHBOURS_LIKES.FILM_ID) DESC " +
                 "LIMIT 5) " +
                 // колонка FILM_WEIGHT представляет собой вес фильма.
                 // Считаем как сумма совпадающих лайков ближайшего соседа и нашего пользователя. То есть, чем в больше
