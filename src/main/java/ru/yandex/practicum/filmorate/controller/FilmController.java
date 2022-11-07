@@ -79,6 +79,13 @@ public class FilmController {
 		filmService.deleteFilm(filmId);
 	}
 
+
+	@GetMapping("search")
+	public List<Film> searchFilmsByString(@RequestParam String query, @RequestParam String by) {
+		return filmService.searchFilmsByString(query, by);
+	}
+
+
     @GetMapping("/director/{directorId}")
     public List<Film> getFilmsByDirector(@PathVariable int directorId,
                                    @RequestParam Optional<String> sortBy){

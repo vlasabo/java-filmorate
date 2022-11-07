@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -11,6 +12,7 @@ import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
 import ru.yandex.practicum.filmorate.model.film_attributes.Mpa;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -92,6 +94,30 @@ public class FilmService {
 		return filmStorage.getMpaById(mpaId);
 	}
 
+	public List<Film> searchFilmsByString(String query, String by) {
+
+		if (by == null) {
+			throw new RuntimeException("searchFilmsByString: 'by' is null");
+		}
+
+		List<String> searchByArr  = new ArrayList<>();
+		if (by.contains("title")) searchByArr.add("title");
+		if (by.contains("director")) searchByArr.add("director");
+
+		String searchBy;
+		switch (searchByArr.size()) {
+			case 1:
+				searchBy = searchByArr.get(0);
+				break;
+			case 2:
+				searchBy = "both";
+				break;
+			default:
+				throw new RuntimeException("searchFilmsByString: 'by' has invalid value:" + by);
+		}
+
+		return filmStorage.searchFilmsByString(query, searchBy);
+	}
 	public void deleteFilm(int id){
 		getFilmById(id);
 		filmStorage.deleteFilm(id);

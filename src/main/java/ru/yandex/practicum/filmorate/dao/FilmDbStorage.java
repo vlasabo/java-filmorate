@@ -214,6 +214,61 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public List<Film> searchFilmsByString(String query, String searchBy) {
+
+        log.info("SearchFilms " + searchBy);
+
+        String lquery = query.toLowerCase();
+        List<Film> foundFilms = new ArrayList<>();
+        switch (searchBy) {
+            case "title":
+                addFoundFilms(searchFilmsByTitle(lquery), foundFilms);
+                break;
+            case "director":
+                addFoundFilms(searchFilmsByDirector(lquery), foundFilms);
+                break;
+            case "both":
+                addFoundFilms(searchFilmsByDirector(lquery), foundFilms);
+                addFoundFilms(searchFilmsByTitle(lquery), foundFilms);
+                break;
+            default:
+                throw new RuntimeException("Invalid argument searchBy: " + searchBy);
+        }
+
+        return foundFilms;
+    }
+
+    private void addFoundFilms(SqlRowSet filmRows, List<Film> films) {
+        while (filmRows.next()) {
+            Film film = getFilmFromRow(filmRows);
+            Director director = getDirectorForFilmId(film.getId());
+            if (director != null) film.getDirectors().add(director);
+            films.add(film);
+        }
+    }
+
+    private SqlRowSet searchFilmsByTitle(String query) {
+        String sqlSearchByTitle = "SELECT f.* " +
+                "FROM (SELECT * FROM films AS fs WHERE LOWER(fs.name) LIKE ?) AS f " +
+                "LEFT OUTER JOIN likes_film AS lf ON f.id = lf.film_id " +
+                "GROUP BY f.id ORDER BY COUNT(lf.user_id) DESC";
+
+        return jdbcTemplate.queryForRowSet(sqlSearchByTitle, "%" + query + "%");
+    }
+
+    private SqlRowSet searchFilmsByDirector(String query) {
+        String sqlSearchByDirector = "SELECT f.* " +
+                "FROM (SELECT * FROM directors AS ds WHERE LOWER(ds.name) LIKE ?) AS d " +
+                "INNER JOIN films_directors AS df ON d.id = df.director_id " +
+                "INNER JOIN films AS f ON df.film_id = f.id " +
+                "LEFT OUTER JOIN likes_film AS lf ON f.id = lf.film_id " +
+                "GROUP BY f.id ORDER BY COUNT(lf.user_id) DESC";
+
+        return jdbcTemplate.queryForRowSet(sqlSearchByDirector, "%" + query + "%");
+    }
+
+
+
     public void deleteFilm(int id) {
         jdbcTemplate.update(SQL_REMOVE_FILM_BY_ID, id);
     }
@@ -371,6 +426,20 @@ public class FilmDbStorage implements FilmStorage {
         SqlRowSet mpaIntRow = jdbcTemplate.queryForRowSet(SQL_FIND_MPA_BY_FILM_ID, filmId);
         mpaIntRow.next();
         return getMpaById(mpaIntRow.getInt("mpa_id"));
+    }
+
+
+    private Director getDirectorForFilmId(int filmId) {
+        String sqlGetDirector = "SELECT d.* FROM directors AS d " +
+                "INNER JOIN films_directors AS fd ON d.id = fd.director_id " +
+                "INNER JOIN (SELECT * FROM films AS fs WHERE fs.id = ?) AS f ON fd.film_id = f.id";
+
+        SqlRowSet dirRow = jdbcTemplate.queryForRowSet(sqlGetDirector, filmId);
+        if (dirRow.next()) {
+            return new Director(dirRow.getInt("id"), dirRow.getString("name"));
+        } else {
+            return null;
+        }
     }
 
     private void updateGenresForFilmInDb(int filmId, List<Integer> genresId) {
