@@ -2,7 +2,9 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
@@ -106,4 +108,13 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
+    public List<Film> getFilmByDirector(int directorId, Optional<String> sortBy) {
+		List<String> validSort = List.of("likes", "year");
+
+		if (sortBy.isEmpty() || !validSort.contains(sortBy.get())){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sortBy");
+		}
+
+		return filmStorage.getFilmByDirector(directorId, sortBy.get());
+    }
 }
