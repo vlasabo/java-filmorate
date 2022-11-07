@@ -233,6 +233,11 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilmByDirector(int directorId, String sortBy) {
+
+        if (Objects.isNull(sortBy)){
+            sortBy = "";
+        }
+
         String sql =    "SELECT " +
                         "   F.ID, " +
                         "   F.NAME, " +

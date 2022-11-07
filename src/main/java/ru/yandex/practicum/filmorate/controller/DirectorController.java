@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import java.util.List;
 
 @RestController
+@RequestMapping("/directors")
 public class DirectorController {
     private final DirectorService service;
 
@@ -17,27 +18,27 @@ public class DirectorController {
         this.service = service;
     }
 
-    @GetMapping("/directors")
+    @GetMapping
     public List<Director> getDirectors(){
         return service.getDirectors();
     }
 
-    @GetMapping("/directors/{id}")
+    @GetMapping("/{id}")
     public Director getDirectorById(@PathVariable int id){
         return service.getDirectorById(id);
     }
 
-    @PostMapping("/directors")
+    @PostMapping
     public Director addDirector(@Valid @RequestBody Director director){
         return service.addDirector(director);
     }
 
-    @PutMapping("/directors")
+    @PutMapping
     public Director updateDirector(@Valid @RequestBody Director director){
         return service.updateDirector(director);
     }
 
-    @DeleteMapping("/directors/{id}")
+    @DeleteMapping("/{id}")
     public void removeDirector(@PathVariable int id){
         service.removeDirector(id);
     }

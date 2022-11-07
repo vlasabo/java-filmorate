@@ -108,10 +108,13 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    public List<Film> getFilmByDirector(int directorId, String sortBy) {
-		if (!sortBy.equals("likes") && !sortBy.equals("year")){
+    public List<Film> getFilmByDirector(int directorId, Optional<String> sortBy) {
+		List<String> validSort = List.of("likes", "year");
+
+		if (sortBy.isEmpty() || !validSort.contains(sortBy.get())){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sortBy");
 		}
-		return filmStorage.getFilmByDirector(directorId, sortBy);
+
+		return filmStorage.getFilmByDirector(directorId, sortBy.get());
     }
 }

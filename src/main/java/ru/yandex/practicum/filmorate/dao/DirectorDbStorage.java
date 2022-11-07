@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dao;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -31,15 +32,17 @@ public class DirectorDbStorage implements DirectorStorage {
     @Override
     public Director get(int id) {
         String sql = "SELECT * FROM DIRECTORS WHERE ID = ?";
-        List<Director> directors = jdbcTemplate.query(sql, (rs, rowNum) -> makeDirector(rs), id);
-        if (directors.size() == 0){
+        Director director;
+        try {
+            director = jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeDirector(rs), id);
+        } catch (DataAccessException e){
             log.debug("Director with id={} not found", id);
             throw new NotFoundException("Director with id=" + id + " not found.");
         }
 
         log.debug("Director received by id={}", id);
 
-        return directors.get(0);
+        return director;
     }
 
     @Override
