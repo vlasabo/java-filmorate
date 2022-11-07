@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.HashMap;
@@ -24,4 +25,6 @@ public interface UserStorage {
 	void removeFriends(User user, User userById);
 
 	void deleteUser(int id);
+
+    List<Film> getRecommendations(int userId);
 }
