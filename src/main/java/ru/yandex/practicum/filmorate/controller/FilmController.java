@@ -58,11 +58,12 @@ public class FilmController {
     }
 
     @GetMapping("popular")
-    public List<Film> mostPopularFilms(@RequestParam Optional<String> count) {
-        //I know about defaultValue, Optional use for logging
-        log.debug("get first {} most popular films", count.orElse("(quantity not specified, so 10)"));
-        return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
+    public List<Film> mostPopularFilms( @RequestParam(required = false, defaultValue = "10") int count,
+                                       @RequestParam Optional<Integer> genreId,
+                                       @RequestParam Optional<String> year) {
+        return filmService.getPopularFilms(count, genreId, year);
     }
+
 
     @GetMapping("/common")
     public List<Film> mostPopularFilmsIntersectionWithFriend(@RequestParam Integer userId, @RequestParam Integer friendId) {
@@ -74,11 +75,22 @@ public class FilmController {
         return filmService.getMostPopularFilmsIntersectionWithFriend(userId, friendId);
     }
     
-    	@DeleteMapping("/{filmId}")
+    @DeleteMapping("/{filmId}")
 	public void deleteFilm(@PathVariable int filmId){
 		filmService.deleteFilm(filmId);
 	}
 
 
+	@GetMapping("search")
+	public List<Film> searchFilmsByString(@RequestParam String query, @RequestParam String by) {
+		return filmService.searchFilmsByString(query, by);
+	}
+
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(@PathVariable int directorId,
+                                   @RequestParam Optional<String> sortBy){
+        return filmService.getFilmByDirector(directorId, sortBy);
+    }
 }
 

@@ -2,13 +2,17 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
 import ru.yandex.practicum.filmorate.model.film_attributes.Mpa;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -94,6 +98,30 @@ public class FilmService {
 		return filmStorage.getMpaById(mpaId);
 	}
 
+	public List<Film> searchFilmsByString(String query, String by) {
+
+		if (by == null) {
+			throw new RuntimeException("searchFilmsByString: 'by' is null");
+		}
+
+		List<String> searchByArr  = new ArrayList<>();
+		if (by.contains("title")) searchByArr.add("title");
+		if (by.contains("director")) searchByArr.add("director");
+
+		String searchBy;
+		switch (searchByArr.size()) {
+			case 1:
+				searchBy = searchByArr.get(0);
+				break;
+			case 2:
+				searchBy = "both";
+				break;
+			default:
+				throw new RuntimeException("searchFilmsByString: 'by' has invalid value:" + by);
+		}
+
+		return filmStorage.searchFilmsByString(query, searchBy);
+	}
 	public void deleteFilm(int id){
 		getFilmById(id);
 		filmStorage.deleteFilm(id);
@@ -109,5 +137,29 @@ public class FilmService {
                 .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
                 .collect(Collectors.toList());
     }
+
+    public List<Film> getFilmByDirector(int directorId, Optional<String> sortBy) {
+		List<String> validSort = List.of("likes", "year");
+
+		if (sortBy.isEmpty() || !validSort.contains(sortBy.get())){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sortBy");
+		}
+
+		return filmStorage.getFilmByDirector(directorId, sortBy.get());
+    }
+
+	public List<Film> getPopularFilms(int count, Optional<Integer> genreId, Optional<String> year) {
+		List<Film> popularFilms;
+		if (genreId.isPresent() && year.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, genreId.get(), year.get());
+		} else if (genreId.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, genreId.get());
+		} else if (year.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, year.get());
+		} else {
+			popularFilms = topNFilms(count);
+		}
+		return popularFilms;
+	}
 
 }

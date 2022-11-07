@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
@@ -96,6 +97,13 @@ class UserDaoTests {
         Assertions.assertEquals(userList.size(), 2);
     }
 
+    @Test
+    public void deleteUserTest() {
+        addUser(1);
+        Assertions.assertEquals("vladimir1", userStorage.findUserById(1).get().getName());
+        userStorage.deleteUser(1);
+        Assertions.assertEquals(0, userStorage.getAllUsers().size());
+    }
     private User addUser(int i) {
         User user = new User("test@test" + i + ".com", "login" + i, "vladimir" + i, LocalDate.ofEpochDay(1));
         userStorage.addUser(user);
