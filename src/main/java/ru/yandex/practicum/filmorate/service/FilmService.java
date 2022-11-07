@@ -117,4 +117,19 @@ public class FilmService {
 
 		return filmStorage.getFilmByDirector(directorId, sortBy.get());
     }
+
+	public List<Film> getPopularFilms(int count, Optional<Integer> genreId, Optional<String> year) {
+		List<Film> popularFilms;
+		if (genreId.isPresent() && year.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, genreId.get(), year.get());
+		} else if (genreId.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, genreId.get());
+		} else if (year.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, year.get());
+		} else {
+			popularFilms = topNFilms(count);
+		}
+		return popularFilms;
+	}
+
 }

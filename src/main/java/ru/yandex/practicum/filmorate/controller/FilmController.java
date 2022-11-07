@@ -58,11 +58,14 @@ public class FilmController {
     }
 
     @GetMapping("popular")
-    public List<Film> mostPopularFilms(@RequestParam Optional<String> count) {
+    public List<Film> mostPopularFilms(@RequestParam Optional<String> count,
+                                       @RequestParam Optional<Integer> genreId,
+                                       @RequestParam Optional<String> year) {
         //I know about defaultValue, Optional use for logging
         log.debug("get first {} most popular films", count.orElse("(quantity not specified, so 10)"));
-        return filmService.topNFilms(Integer.parseInt(count.orElse("10")));
+        return filmService.getPopularFilms(Integer.parseInt(count.orElse("10")), genreId, year);
     }
+
 
     @GetMapping("/common")
     public List<Film> mostPopularFilmsIntersectionWithFriend(@RequestParam Integer userId, @RequestParam Integer friendId) {
