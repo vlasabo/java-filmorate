@@ -33,6 +33,7 @@ public interface FilmStorage {
 
     List<Film> topNFilms(int count);
 
+    List<Film> searchFilmsByString(String query, String searchBy);
 
     void deleteFilm(int id);
 
