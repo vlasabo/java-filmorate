@@ -195,4 +195,25 @@ class FilmDaoTests {
         // должно вернуть 404 для несуществующего пользователя
         Assertions.assertThrows(NotFoundException.class, () -> userStorage.getRecommendations(42));
     }
+    @Test
+    public void deleteFilmTest() {
+        addFilm(1);
+        Assertions.assertEquals("testTitle1", filmStorage.getFilmById(1).get().getName());
+        filmStorage.deleteFilm(1);
+        Assertions.assertEquals(0, filmStorage.getAllFilms().size());
+    }
+
+    @Test
+    public void getPopularFilms() {
+        addFilm(1);
+        addFilm(2);
+        addFilm(3);
+        addUser(1);
+        filmStorage.addLike(1, 1);
+        filmStorage.addLike(2, 1);
+        Assertions.assertEquals(0, filmStorage.getPopularFilms(10,"2000").size());
+        Assertions.assertEquals(3, filmStorage.getPopularFilms(10,1,"1970").size());
+        Assertions.assertEquals(0, filmStorage.getPopularFilms(0,3).size());
+    }
+
 }
