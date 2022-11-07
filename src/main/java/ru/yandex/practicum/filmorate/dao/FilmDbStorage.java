@@ -392,6 +392,68 @@ public class FilmDbStorage implements FilmStorage {
 
     }
 
+    @Override
+    public List<Film> getPopularFilms(int count, int genreId, String year) {
+        List<Integer> allFilmsId = new ArrayList<>();
+        String sql =
+                "SELECT f.id " +
+                        "FROM films AS f " +
+                        "JOIN films_genres AS fg ON f.id = fg.film_id " +
+                        "JOIN genres AS g ON g.genre_id = fg.genre_id " +
+                        "LEFT JOIN (SELECT film_id, COUNT(user_id) rating " +
+                        "      FROM likes_film " +
+                        "      GROUP BY film_id) AS r ON f.id =  r.film_id " +
+                        "WHERE YEAR(f.release_date) = ? AND g.genre_id = ?" +
+                        "ORDER BY r.rating DESC " +
+                        "LIMIT ?;";
+        SqlRowSet filmIdRows = jdbcTemplate.queryForRowSet(sql, year, genreId, count);
+        while (filmIdRows.next()) {
+            allFilmsId.add(filmIdRows.getInt("id"));
+        }
+        return getListFilmsByListId(allFilmsId);
+    }
+
+
+    @Override
+    public List<Film> getPopularFilms(int count, int genreId) {
+        List<Integer> allFilmsId = new ArrayList<>();
+        String sql =
+                "SELECT f.id " +
+                        "FROM films AS f " +
+                        "JOIN films_genres AS fg ON f.id = fg.film_id " +
+                        "LEFT JOIN (SELECT film_id, COUNT(user_id) rating " +
+                        "      FROM likes_film " +
+                        "      GROUP BY film_id) AS r ON f.id =  r.film_id " +
+                        "WHERE fg.genre_id = ?" +
+                        "ORDER BY r.rating DESC " +
+                        "LIMIT ?;";
+        SqlRowSet filmIdRows = jdbcTemplate.queryForRowSet(sql, genreId, count);
+        while (filmIdRows.next()) {
+            allFilmsId.add(filmIdRows.getInt("id"));
+        }
+        return getListFilmsByListId(allFilmsId);
+    }
+
+    @Override
+    public List<Film> getPopularFilms(int count, String year) {
+        List<Integer> allFilmsId = new ArrayList<>();
+        String sql =
+                "SELECT  f.id " +
+                        "FROM films AS f " +
+                        "LEFT JOIN (SELECT film_id, COUNT(user_id) rating " +
+                        "            FROM likes_film " +
+                        "            GROUP BY film_id) AS r ON f.id =  r.film_id " +
+                        "WHERE YEAR(f.release_date) = ? " +
+                        "ORDER BY r.rating DESC " +
+                        "LIMIT ?;";
+        SqlRowSet filmIdRows = jdbcTemplate.queryForRowSet(sql, year, count);
+        while (filmIdRows.next()) {
+            allFilmsId.add(filmIdRows.getInt("id"));
+        }
+        return getListFilmsByListId(allFilmsId);
+    }
+
+
     private Set<Integer> getSetLikesForFilmFromDb(int filmId) {
         Set<Integer> likes = new HashSet<>();
         SqlRowSet likesRows = jdbcTemplate.queryForRowSet("SELECT user_id FROM likes_film WHERE film_id = ?", filmId);
