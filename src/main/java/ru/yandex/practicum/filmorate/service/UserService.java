@@ -93,4 +93,10 @@ public class UserService {
         log.debug("get all users");
         return userStorage.getAllUsers();
     }
+
+    public void deleteUser(int id) {
+        getUserById(id);
+        userStorage.deleteUser(id);
+        log.debug("Delete  user {}", id);
+    }
 }

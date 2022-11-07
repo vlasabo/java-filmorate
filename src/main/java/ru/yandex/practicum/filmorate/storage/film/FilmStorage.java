@@ -34,4 +34,10 @@ public interface FilmStorage {
     List<Film> topNFilms(int count);
 
     List<Film> searchFilmsByString(String query, String searchBy);
+
+    void deleteFilm(int id);
+
+    List<Film> getAllFilmsUserLiked(int userId);
+
+    List<Film> getFilmByDirector(int directorId, String sortBy);
 }

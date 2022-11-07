@@ -38,6 +38,8 @@ public class UserDbStorage implements UserStorage {
             "insert into users_friendship (user1_id, user2_id , mutually) values (?, ?, ?)";
     private static final String SQL_FIND_ALL_FRIENDS = "SELECT * FROM users_friendship WHERE USER1_ID = ?";
 
+    private static final String SQL_DELETE_USER_BY_ID = "DELETE FROM users WHERE id= ?";
+
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -131,6 +133,11 @@ public class UserDbStorage implements UserStorage {
         if (user2.getFriends().containsKey(user1.getId())) {
             updateFriendship(user2, user1, false);
         }
+    }
+
+    @Override
+    public void deleteUser(int id) {
+        jdbcTemplate.update(SQL_DELETE_USER_BY_ID, id);
     }
 
 }

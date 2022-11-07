@@ -2,8 +2,10 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
@@ -20,12 +22,13 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class FilmService {
-	private final FilmStorage filmStorage;
+    private final FilmStorage filmStorage;
 
-	@Autowired
+    @Autowired
     public FilmService(FilmStorage filmDbStorage) {
         this.filmStorage = filmDbStorage;
     }
+
 
 	public Film like(int filmId, int userId, UserService userService, boolean like) {
 		Film film = getFilmById(filmId);
@@ -115,4 +118,29 @@ public class FilmService {
 
 		return filmStorage.searchFilmsByString(query, searchBy);
 	}
+	public void deleteFilm(int id){
+		getFilmById(id);
+		filmStorage.deleteFilm(id);
+		log.debug("Delete  film {}", id);
+	}
+
+    public List<Film> getMostPopularFilmsIntersectionWithFriend(int userId, int friendId) {
+        List<Film> allFilmsUserLiked = filmStorage.getAllFilmsUserLiked(userId);
+        List<Film> allFilmsFriendLiked = filmStorage.getAllFilmsUserLiked(friendId);
+
+        return allFilmsUserLiked.stream()
+                .filter(allFilmsFriendLiked::contains)
+                .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
+                .collect(Collectors.toList());
+    }
+
+    public List<Film> getFilmByDirector(int directorId, Optional<String> sortBy) {
+		List<String> validSort = List.of("likes", "year");
+
+		if (sortBy.isEmpty() || !validSort.contains(sortBy.get())){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sortBy");
+		}
+
+		return filmStorage.getFilmByDirector(directorId, sortBy.get());
+    }
 }

@@ -63,4 +63,9 @@ public class UserController {
     public List<User> getIntersectionFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
         return userService.getIntersectionFriends(id, otherId);
     }
+
+    @DeleteMapping("/{userId}")
+    public void deleteUser(@PathVariable int userId) {
+        userService.deleteUser(userId);
+    }
 }
