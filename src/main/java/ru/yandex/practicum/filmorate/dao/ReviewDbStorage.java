@@ -88,7 +88,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
         log.debug("Updated review with id={}", review.getId());
 
-        return review;
+        return get(review.getId());
     }
 
     @Override

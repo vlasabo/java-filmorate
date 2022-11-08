@@ -23,11 +23,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class FilmService {
     private final FilmStorage filmStorage;
+	private final EventService eventService;
 
     @Autowired
-    public FilmService(FilmStorage filmDbStorage) {
+    public FilmService(FilmStorage filmDbStorage, EventService eventService) {
         this.filmStorage = filmDbStorage;
-    }
+		this.eventService = eventService;
+	}
 
 
 	public Film like(int filmId, int userId, UserService userService, boolean like) {
@@ -37,10 +39,12 @@ public class FilmService {
 			film.addLike(userId);
 			filmStorage.addLike(filmId, userId);
 			log.debug("add like to film with id={} from user with id={}", filmId, userId);
+			eventService.addAddedLikeEvent(userId, filmId);
 		} else {
 			film.removeLike(userId);
 			filmStorage.removeLike(filmId, userId);
 			log.debug("remove like to film with id={} from user with id={}", filmId, userId);
+			eventService.addRemovedLikeEvent(userId, filmId);
 		}
 		return film;
 	}

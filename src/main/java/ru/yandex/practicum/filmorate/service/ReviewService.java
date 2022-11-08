@@ -12,10 +12,12 @@ import java.util.Optional;
 public class ReviewService {
 
     private final ReviewStorage storage;
+    private final EventService eventService;
 
     @Autowired
-    public ReviewService(ReviewStorage storage){
+    public ReviewService(ReviewStorage storage, EventService eventService){
         this.storage = storage;
+        this.eventService = eventService;
     }
 
     public List<Review> getReviews(Optional<Integer> filmId, int count) {
@@ -26,11 +28,15 @@ public class ReviewService {
     }
 
     public Review addReview(Review review) {
-        return storage.add(review);
+        Review added = storage.add(review);
+        eventService.addAddedReviewEvent(added.getUserId(), added.getId());
+        return added;
     }
 
     public Review updateReview(Review review) {
-        return storage.update(review);
+        Review updated = storage.update(review);
+        eventService.addUpdatedReviewEvent(updated.getUserId(), updated.getId());
+        return updated;
     }
 
     public Review getReview(int id) {
@@ -38,7 +44,9 @@ public class ReviewService {
     }
 
     public void removeReview(int id) {
+        Review review = getReview(id);
         storage.remove(id);
+        eventService.addRemovedReviewEvent(review.getUserId(), review.getId());
     }
 
     public void addLike(int id, int userId) {
