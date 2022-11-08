@@ -31,7 +31,7 @@ public class EventDbStorage implements EventStorage {
                 .withTableName("events")
                 .usingGeneratedKeyColumns("event_id");
         Map<String, Object> values = new HashMap<>();
-        values.put("event_time", Timestamp.from(Instant.ofEpochMilli(event.getTimestamp())));
+        values.put("event_time", new Timestamp(event.getTimestamp()));
         values.put("event_type", event.getEventType().name());
         values.put("operation", event.getOperation().name());
         values.put("user_id", event.getUserId());
