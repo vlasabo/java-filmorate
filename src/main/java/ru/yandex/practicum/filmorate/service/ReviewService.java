@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
@@ -8,16 +8,11 @@ import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ReviewService {
 
     private final ReviewStorage storage;
     private final EventService eventService;
-
-    @Autowired
-    public ReviewService(ReviewStorage storage, EventService eventService){
-        this.storage = storage;
-        this.eventService = eventService;
-    }
 
     public List<Review> getReviews(int filmId, int count) {
         return filmId == -1 ? storage.getReviews(count) : storage.getReviewsByFilm(filmId, count);

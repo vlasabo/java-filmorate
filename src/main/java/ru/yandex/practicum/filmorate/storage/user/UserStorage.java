@@ -20,7 +20,7 @@ public interface UserStorage {
 
 	Optional<User> findUserById(int userId);
 
-	HashMap<Integer, Boolean> findALlFriends(User user);
+	HashMap<Integer, Boolean> findAllFriends(User user);
 
 	void removeFriends(User user, User userById);
 

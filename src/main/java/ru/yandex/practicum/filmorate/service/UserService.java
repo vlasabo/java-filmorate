@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -14,22 +14,17 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
     private final EventService eventService;
 
-    @Autowired
-    public UserService(UserStorage userDbStorage, EventService eventService) {
-        this.userStorage = userDbStorage;
-        this.eventService = eventService;
-    }
-
     public User getUserById(int userId) {
         Optional<User> userOptional = userStorage.findUserById(userId);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            user.setFriends(userStorage.findALlFriends(user));
+            user.setFriends(userStorage.findAllFriends(user));
             return user;
         } else {
             log.debug("User by id {} not found", userId);
@@ -74,7 +69,7 @@ public class UserService {
 
     public List<User> getAllFriends(int userId) {
         User user = getUserById(userId);
-        Map<Integer, Boolean> allFriendsId = userStorage.findALlFriends(user);
+        Map<Integer, Boolean> allFriendsId = userStorage.findAllFriends(user);
         return allFriendsId.keySet().stream().map(this::getUserById).collect(Collectors.toList());
     }
 

@@ -2,11 +2,8 @@ package ru.yandex.practicum.filmorate.dao;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -17,9 +14,13 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.sql.*;
 import java.sql.Date;
-import java.util.*;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -43,7 +44,6 @@ public class UserDbStorage implements UserStorage {
 
     private static final String SQL_DELETE_USER_BY_ID = "DELETE FROM users WHERE id= ?";
 
-    @Autowired
     private final FilmStorage filmStorage;
 
     @Override
@@ -98,7 +98,7 @@ public class UserDbStorage implements UserStorage {
             User user = new User(userRows.getString("email"), userRows.getString("login")
                     , userRows.getString("name"), userRows.getDate("birthday").toLocalDate());
             user.setId(userRows.getInt("id"));
-            user.setFriends(findALlFriends(user));
+            user.setFriends(findAllFriends(user));
             return Optional.of(user);
         } else {
             return Optional.empty();
@@ -120,7 +120,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public HashMap<Integer, Boolean> findALlFriends(User user) {
+    public HashMap<Integer, Boolean> findAllFriends(User user) {
         HashMap<Integer, Boolean> friendsMap = new HashMap<>();
         SqlRowSet userRows = jdbcTemplate.queryForRowSet(SQL_FIND_ALL_FRIENDS, user.getId());
         while (userRows.next()) {
