@@ -6,7 +6,6 @@ import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ReviewService {
@@ -20,11 +19,8 @@ public class ReviewService {
         this.eventService = eventService;
     }
 
-    public List<Review> getReviews(Optional<Integer> filmId, int count) {
-        if (filmId.isEmpty()) {
-            return storage.getReviews(count);
-        }
-        return storage.getReviewsByFilm(filmId.get(), count);
+    public List<Review> getReviews(int filmId, int count) {
+        return filmId == -1 ? storage.getReviews(count) : storage.getReviewsByFilm(filmId, count);
     }
 
     public Review addReview(Review review) {

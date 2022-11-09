@@ -55,8 +55,6 @@ public class FilmDbStorage implements FilmStorage {
             "INSERT INTO films_mpa (film_id, mpa_id) VALUES (?, ?)";
     private static final String SQL_DELETE_FILM_GENRES =
             "DELETE FROM films_genres WHERE film_id = ?";
-    private static final String SQL_ADD_FILM_GENRES = //TODO: удалить
-            "INSERT INTO films_genres (film_id, genre_id) VALUES (?, ?)";
 
     private static final String SQL_ADD_FILM_LIKE =
             "INSERT INTO likes_film (film_id, user_id) VALUES (?, ?)";

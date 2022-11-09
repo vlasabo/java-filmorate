@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.service.ReviewService;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 
 @RestController
@@ -22,7 +21,7 @@ public class ReviewController {
     }
 
     @GetMapping()
-    public List<Review> getReviews(@RequestParam Optional<Integer> filmId,
+    public List<Review> getReviews(@RequestParam(defaultValue = "-1") int filmId,
                                    @RequestParam(defaultValue = "10") int count){
         return reviewService.getReviews(filmId, count);
     }

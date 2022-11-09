@@ -138,28 +138,30 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    public List<Film> getFilmByDirector(int directorId, Optional<String> sortBy) {
+    public List<Film> getFilmByDirector(int directorId, String sortBy) {
+		Optional<String> sortByOp = Optional.ofNullable(sortBy);
 		List<String> validSort = List.of("likes", "year");
 
-		if (sortBy.isEmpty() || !validSort.contains(sortBy.get())){
+		if (sortByOp.isEmpty() || !validSort.contains(sortByOp.get())){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sortBy");
 		}
 
-		return filmStorage.getFilmByDirector(directorId, sortBy.get());
+		return filmStorage.getFilmByDirector(directorId, sortByOp.get());
     }
 
-	public List<Film> getPopularFilms(int count, Optional<Integer> genreId, Optional<String> year) {
+	public List<Film> getPopularFilms(int count, Integer genreId, String year) {
+		Optional<Integer> genreIdOp = Optional.ofNullable(genreId);
+		Optional<String> yearOp = Optional.ofNullable(year);
 		List<Film> popularFilms;
-		if (genreId.isPresent() && year.isPresent()) {
-			popularFilms = filmStorage.getPopularFilms(count, genreId.get(), year.get());
-		} else if (genreId.isPresent()) {
-			popularFilms = filmStorage.getPopularFilms(count, genreId.get());
-		} else if (year.isPresent()) {
-			popularFilms = filmStorage.getPopularFilms(count, year.get());
+		if (genreIdOp.isPresent() && yearOp.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, genreIdOp.get(), yearOp.get());
+		} else if (genreIdOp.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, genreIdOp.get());
+		} else if (yearOp.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, yearOp.get());
 		} else {
 			popularFilms = topNFilms(count);
 		}
 		return popularFilms;
 	}
-
 }
