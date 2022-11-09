@@ -6,7 +6,6 @@ import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ReviewService {

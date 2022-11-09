@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "films")
@@ -59,11 +58,10 @@ public class FilmController {
 
     @GetMapping("popular")
     public List<Film> mostPopularFilms( @RequestParam(required = false, defaultValue = "10") int count,
-                                       @RequestParam Optional<Integer> genreId,
-                                       @RequestParam Optional<String> year) {
+                                        @RequestParam(required = false) Integer genreId,
+                                        @RequestParam(required = false) String year) {
         return filmService.getPopularFilms(count, genreId, year);
     }
-
 
     @GetMapping("/common")
     public List<Film> mostPopularFilmsIntersectionWithFriend(@RequestParam Integer userId, @RequestParam Integer friendId) {
@@ -89,7 +87,7 @@ public class FilmController {
 
     @GetMapping("/director/{directorId}")
     public List<Film> getFilmsByDirector(@PathVariable int directorId,
-                                   @RequestParam Optional<String> sortBy){
+                                   @RequestParam String sortBy){
         return filmService.getFilmByDirector(directorId, sortBy);
     }
 }
