@@ -1,9 +1,10 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -13,20 +14,17 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
-
-    @Autowired
-    public UserService(UserStorage userDbStorage) {
-        this.userStorage = userDbStorage;
-    }
+    private final EventService eventService;
 
     public User getUserById(int userId) {
         Optional<User> userOptional = userStorage.findUserById(userId);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            user.setFriends(userStorage.findALlFriends(user));
+            user.setFriends(userStorage.findAllFriends(user));
             return user;
         } else {
             log.debug("User by id {} not found", userId);
@@ -40,9 +38,11 @@ public class UserService {
         if (add) { //this "if" only for log
             checkMutuallyAndAddOrRemoveFriend(user, friendId, true);
             log.debug("User {} add friend {}", userId, friendId);
+            eventService.addAddedFriendEvent(userId, friendId);
         } else {
             checkMutuallyAndAddOrRemoveFriend(user, friendId, false);
             log.debug("User {} remove friend {}", userId, friendId);
+            eventService.addRemovedFriendEvent(userId, friendId);
         }
         return user;
     }
@@ -69,7 +69,7 @@ public class UserService {
 
     public List<User> getAllFriends(int userId) {
         User user = getUserById(userId);
-        Map<Integer, Boolean> allFriendsId = userStorage.findALlFriends(user);
+        Map<Integer, Boolean> allFriendsId = userStorage.findAllFriends(user);
         return allFriendsId.keySet().stream().map(this::getUserById).collect(Collectors.toList());
     }
 
@@ -92,5 +92,16 @@ public class UserService {
     public List<User> getAllUsers() {
         log.debug("get all users");
         return userStorage.getAllUsers();
+    }
+
+    public void deleteUser(int id) {
+        getUserById(id);
+        userStorage.deleteUser(id);
+        log.debug("Delete  user {}", id);
+    }
+
+    public List<Film> getRecommendations(Integer userId) {
+        getUserById(userId);
+        return userStorage.getRecommendations(userId);
     }
 }

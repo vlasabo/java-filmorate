@@ -1,14 +1,17 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.film_attributes.Genre;
 import ru.yandex.practicum.filmorate.model.film_attributes.Mpa;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -16,14 +19,12 @@ import java.util.stream.Collectors;
 
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class FilmService {
-	private final FilmStorage filmStorage;
+    private final FilmStorage filmStorage;
+	private final EventService eventService;
 
-	@Autowired
-    public FilmService(FilmStorage filmDbStorage) {
-        this.filmStorage = filmDbStorage;
-    }
 
 	public Film like(int filmId, int userId, UserService userService, boolean like) {
 		Film film = getFilmById(filmId);
@@ -32,10 +33,12 @@ public class FilmService {
 			film.addLike(userId);
 			filmStorage.addLike(filmId, userId);
 			log.debug("add like to film with id={} from user with id={}", filmId, userId);
+			eventService.addAddedLikeEvent(userId, filmId);
 		} else {
 			film.removeLike(userId);
 			filmStorage.removeLike(filmId, userId);
 			log.debug("remove like to film with id={} from user with id={}", filmId, userId);
+			eventService.addRemovedLikeEvent(userId, filmId);
 		}
 		return film;
 	}
@@ -87,5 +90,72 @@ public class FilmService {
 
 	public Mpa getMpaById(Integer mpaId) {
 		return filmStorage.getMpaById(mpaId);
+	}
+
+	public List<Film> searchFilmsByString(String query, String by) {
+
+		if (by == null) {
+			throw new RuntimeException("searchFilmsByString: 'by' is null");
+		}
+
+		List<String> searchByArr  = new ArrayList<>();
+		if (by.contains("title")) searchByArr.add("title");
+		if (by.contains("director")) searchByArr.add("director");
+
+		String searchBy;
+		switch (searchByArr.size()) {
+			case 1:
+				searchBy = searchByArr.get(0);
+				break;
+			case 2:
+				searchBy = "both";
+				break;
+			default:
+				throw new RuntimeException("searchFilmsByString: 'by' has invalid value:" + by);
+		}
+
+		return filmStorage.searchFilmsByString(query, searchBy);
+	}
+	public void deleteFilm(int id){
+		getFilmById(id);
+		filmStorage.deleteFilm(id);
+		log.debug("Delete  film {}", id);
+	}
+
+    public List<Film> getMostPopularFilmsIntersectionWithFriend(int userId, int friendId) {
+        List<Film> allFilmsUserLiked = filmStorage.getAllFilmsUserLiked(userId);
+        List<Film> allFilmsFriendLiked = filmStorage.getAllFilmsUserLiked(friendId);
+
+        return allFilmsUserLiked.stream()
+                .filter(allFilmsFriendLiked::contains)
+                .sorted((o1, o2) -> o2.getLikes().size() - o1.getLikes().size())
+                .collect(Collectors.toList());
+    }
+
+    public List<Film> getFilmByDirector(int directorId, String sortBy) {
+		Optional<String> sortByOp = Optional.ofNullable(sortBy);
+		List<String> validSort = List.of("likes", "year");
+
+		if (sortByOp.isEmpty() || !validSort.contains(sortByOp.get())){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sortBy");
+		}
+
+		return filmStorage.getFilmByDirector(directorId, sortByOp.get());
+    }
+
+	public List<Film> getPopularFilms(int count, Integer genreId, String year) {
+		Optional<Integer> genreIdOp = Optional.ofNullable(genreId);
+		Optional<String> yearOp = Optional.ofNullable(year);
+		List<Film> popularFilms;
+		if (genreIdOp.isPresent() && yearOp.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, genreIdOp.get(), yearOp.get());
+		} else if (genreIdOp.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, genreIdOp.get());
+		} else if (yearOp.isPresent()) {
+			popularFilms = filmStorage.getPopularFilms(count, yearOp.get());
+		} else {
+			popularFilms = topNFilms(count);
+		}
+		return popularFilms;
 	}
 }

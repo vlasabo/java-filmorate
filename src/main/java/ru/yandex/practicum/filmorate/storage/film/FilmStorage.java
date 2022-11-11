@@ -21,7 +21,7 @@ public interface FilmStorage {
 
     List<Genre> getAllGenres();
 
-    Genre getGenreById(int genreid);
+    Genre getGenreById(int genreId);
 
     List<Mpa> getAllMpa();
 
@@ -32,4 +32,18 @@ public interface FilmStorage {
     void removeLike(int filmId, int userId);
 
     List<Film> topNFilms(int count);
+
+    List<Film> searchFilmsByString(String query, String searchBy);
+
+    void deleteFilm(int id);
+
+    List<Film> getAllFilmsUserLiked(int userId);
+
+    List<Film> getFilmByDirector(int directorId, String sortBy);
+
+    List<Film> getListFilmsByListId(List<Integer> ids);
+    List<Film> getPopularFilms(int count, int genreId, String year);
+    List<Film> getPopularFilms(int count, int genreId);
+
+    List<Film> getPopularFilms(int count, String year);
 }

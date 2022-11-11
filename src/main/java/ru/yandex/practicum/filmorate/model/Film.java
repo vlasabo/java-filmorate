@@ -31,6 +31,7 @@ public class Film {
     @Positive(message = "DURATION IS NEGATIVE OR ZERO")
     private final int duration;
     private Set<Integer> likes = new HashSet<>();
+    private Set<Director> directors = new HashSet<>();
 
     public Film(String title, String description, LocalDate releaseDate, int duration) {
         this.name = title;
